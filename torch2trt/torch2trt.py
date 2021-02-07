@@ -472,7 +472,7 @@ class TRTModule(torch.nn.Module):
         if not self.context.profiler:
             self.context.profiler = trt.Profiler()
 
-    
+
 def torch2trt(module, 
               inputs, 
               input_names=None, 

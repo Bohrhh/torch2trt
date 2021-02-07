@@ -77,7 +77,10 @@ def convert_interpolate_trt7(ctx):
     if scales != None:
         if not isinstance(scales, collections.Sequence):
             scales = [scales] * input_dim
-        layer.scales = [1] + list(scales)
+        shape = [input.size(1)] + [input.size(i+2)*int(scales[i]) for i in range(input_dim)]
+        # layer.scales = [1] + list(scales)
+        layer.shape = shape
+        print(shape)
 
     resize_mode = mode
     if resize_mode.lower() in ["linear","bilinear","trilinear"]:
