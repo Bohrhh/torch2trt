@@ -16,3 +16,4 @@ __pycache__/
 *.ipynb_checkpoints
 *.pth
 docs/converters.md
+torch2trt_test.md

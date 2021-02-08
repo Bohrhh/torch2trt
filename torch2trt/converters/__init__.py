@@ -4,7 +4,6 @@ from .dummy_converters import *
 
 # supported converters will override dummy converters
 
-from .AdaptiveAvgPool2d import *
 from .BatchNorm1d import *
 from .BatchNorm2d import *
 from .Conv import *
@@ -55,3 +54,5 @@ from .tanh import *
 from .transpose import *
 from .unary import *
 from .view import *
+from .argmax import *
+from .argmin import *

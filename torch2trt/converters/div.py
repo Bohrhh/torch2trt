@@ -74,7 +74,7 @@ class RDivInt(torch.nn.Module):
         super(RDivInt, self).__init__()
 
     def forward(self, x):
-        return 100 / x
+        return 10 / x
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
@@ -87,7 +87,7 @@ class RDivFloat(torch.nn.Module):
         super(RDivFloat, self).__init__()
 
     def forward(self, x):
-        return 100.0 / x
+        return 10.0 / x
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])

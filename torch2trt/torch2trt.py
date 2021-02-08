@@ -26,6 +26,8 @@ def torch_dtype_to_trt(dtype):
         return trt.int8
     elif dtype == torch.int32:
         return trt.int32
+    elif dtype == torch.int64:
+        return trt.int32
     elif dtype == torch.float16:
         return trt.float16
     elif dtype == torch.float32:
@@ -478,9 +480,9 @@ def torch2trt(module,
               input_names=None, 
               output_names=None, 
               log_level=trt.Logger.ERROR, 
-              max_batch_size=1,
+              max_batch_size=32,
               fp16_mode=False, 
-              max_workspace_size=1<<25, 
+              max_workspace_size=1<<30, 
               strict_type_constraints=False, 
               keep_network=True, 
               int8_mode=False, 
