@@ -7,8 +7,6 @@ from .dummy_converters import *
 from .BatchNorm1d import *
 from .BatchNorm2d import *
 from .Conv import *
-from .Conv1d import *
-from .Conv2d import *
 from .ConvTranspose import *
 from .ConvTranspose2d import *
 from .Linear import *

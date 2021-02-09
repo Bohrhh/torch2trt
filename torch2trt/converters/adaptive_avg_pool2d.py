@@ -1,6 +1,7 @@
-from torch2trt.torch2trt import *
-from torch2trt.module_test import add_module_test
 import numpy as np
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.module_test import add_module_test
+from torch2trt.utils import *
 
 @tensorrt_converter('torch.nn.functional.adaptive_avg_pool2d')
 def convert_adaptive_avg_pool2d(ctx):
