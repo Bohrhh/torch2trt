@@ -4,8 +4,6 @@ from .dummy_converters import *
 
 # supported converters will override dummy converters
 
-from .BatchNorm1d import *
-from .BatchNorm2d import *
 from .Conv import *
 from .ConvTranspose import *
 from .ConvTranspose2d import *
@@ -15,6 +13,8 @@ from .activation import *
 from .adaptive_avg_pool2d import *
 from .adaptive_max_pool2d import *
 from .add import *
+from .argmax import *
+from .argmin import *
 from .avg_pool import *
 from .batch_norm import *
 from .cat import *
@@ -52,5 +52,3 @@ from .tanh import *
 from .transpose import *
 from .unary import *
 from .view import *
-from .argmax import *
-from .argmin import *
