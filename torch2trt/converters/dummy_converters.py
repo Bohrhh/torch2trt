@@ -1,4 +1,5 @@
-from torch2trt.torch2trt import *
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
 
 
 def is_private(method):

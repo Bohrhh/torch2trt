@@ -10,7 +10,7 @@ def convert_elementwise(ctx, op):
 
     # get tensorrt input
     input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input_a, input_b])
-    input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], len(output.shape) - 1)
+    input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], len(output.shape))
 
     # add tensorrt layer
     layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, op)
@@ -27,24 +27,36 @@ def convert_gt(ctx):
 
 @tensorrt_converter('torch.lt', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.Tensor.__lt__', enabled=trt_version() >= '7.0')
-def convert_gt(ctx):
+def convert_lt(ctx):
     return convert_elementwise(ctx, trt.ElementWiseOperation.LESS)
 
 
 @tensorrt_converter('torch.eq', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.Tensor.__eq__', enabled=trt_version() >= '7.0')
-def convert_gt(ctx):
+def convert_eq(ctx):
     return convert_elementwise(ctx, trt.ElementWiseOperation.EQUAL)
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0')
-def test_gt_basic():
+def test_gt_tensor():
     return TestInterface(lambda x, y: x>y)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0')
-def test_gt_basic():
-    return TestInterface(lambda x, y: x<y)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)], enabled=trt_version() >= '7.0')
+def test_gt_float():
+    return TestInterface(lambda x: x>0.1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0')
-def test_gt_basic():
+def test_lt_tensor():
+    return TestInterface(lambda x, y: x<y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)], enabled=trt_version() >= '7.0')
+def test_lt_float():
+    return TestInterface(lambda x: x<0.1)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0')
+def test_eq_tensor():
     return TestInterface(lambda x, y: x==y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)], enabled=trt_version() >= '7.0')
+def test_eq_float():
+    return TestInterface(lambda x: x==0.1)
