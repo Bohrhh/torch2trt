@@ -1,5 +1,5 @@
-from torch2trt.torch2trt import *
-from torch2trt.module_test import add_module_test
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
 
 @tensorrt_converter('torch.nn.ConvTranspose1d.forward', enabled=trt_version() >= '7.1.3')
 @tensorrt_converter('torch.nn.ConvTranspose2d.forward', enabled=trt_version() >= '7.1.3')

@@ -1,11 +1,11 @@
-from torch2trt import *
-from .module_test import ModuleTest, MODULE_TESTS
-import time
-import argparse
 import re
+import time
 import runpy
+import argparse
 import traceback
 from termcolor import colored
+from torch2trt import torch2trt
+from .utils import *
 
 
 def run(self):

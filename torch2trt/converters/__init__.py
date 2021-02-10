@@ -6,7 +6,6 @@ from .dummy_converters import *
 
 from .Conv import *
 from .ConvTranspose import *
-from .ConvTranspose2d import *
 from .Linear import *
 from .LogSoftmax import *
 from .activation import *
