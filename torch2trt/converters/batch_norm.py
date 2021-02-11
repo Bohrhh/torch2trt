@@ -3,7 +3,7 @@ from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 @tensorrt_converter('torch.nn.functional.batch_norm', enabled=trt_version() >= '7.0')
-def convert_batch_norm_trt7(ctx):
+def convert_batch_norm(ctx):
     # parse args
     input        = get_arg(ctx, 'input'       , pos=0, default=None) 
     running_mean = get_arg(ctx, 'running_mean', pos=1, default=None) 
