@@ -19,32 +19,33 @@ def convert_mean(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-    
-class Mean(torch.nn.Module):
-    def __init__(self, dim, keepdim):
-        super(Mean, self).__init__()
-        self.dim = dim
-        self.keepdim = keepdim
-    def forward(self, x):
-        return x.mean(self.dim, self.keepdim)
     
     
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_mean_channel():
-    return Mean(1, False)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_mean_tuple():
-    return Mean((1, 2), False)
-
+def test_mean_torch_d1():
+    return TestInterface(lambda x: torch.mean(x, dim=1, keepdim=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_mean_keepdim():
-    return Mean(1, True)
+def test_mean_tensor_d1():
+    return TestInterface(lambda x: x.mean(dim=1, keepdim=False))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+def test_mean_tensor_reduce():
+    return TestInterface(lambda x: x.mean())
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+def test_mean_torch_d1_d2():
+    return TestInterface(lambda x: torch.mean(x, dim=(1,2), keepdim=False))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+def test_mean_torch_keepdim():
+    return TestInterface(lambda x: torch.mean(x, dim=1, keepdim=True))

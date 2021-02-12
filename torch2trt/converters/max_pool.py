@@ -12,10 +12,10 @@ def convert_max_pool(ctx):
     stride         = get_arg(ctx, 'stride'     ,       pos=2, default=None )
     padding        = get_arg(ctx, 'padding'    ,       pos=3, default=0    )
     dilation       = get_arg(ctx, 'dilation'    ,      pos=4, default=1    )
-    return_indices = get_arg(ctx, 'return_indices',    pos=5, default=False)
-    ceil_mode      = get_arg(ctx, 'ceil_mode',         pos=6, default=False)
+    ceil_mode      = get_arg(ctx, 'ceil_mode',         pos=5, default=False)
+    return_indices = get_arg(ctx, 'return_indices',    pos=6, default=False)
     output         = ctx.method_return
-    assert dilation==1 and return_indices==False
+    assert dilation==1 and return_indices==Falsem
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]

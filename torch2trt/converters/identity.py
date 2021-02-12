@@ -25,30 +25,18 @@ def convert_identity(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
 def test_tensor_contiguous():
-    return TestInterface(lambda x: x.contiguous())
+    return TestInterface(lambda x: (x+1).contiguous())
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
 def test_dropout_f():
-    return TestInterface(lambda x: nn.functional.dropout(x, training=False))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
-def test_dropout_m():
-    return nn.Dropout()
+    return TestInterface(lambda x: nn.functional.dropout((x+1), training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
 def test_dropout2d_f():
-    return TestInterface(lambda x: nn.functional.dropout2d(x, training=False))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
-def test_dropout2d_m():
-    return nn.Dropout2d()
+    return TestInterface(lambda x: nn.functional.dropout2d((x+1), training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3,3)])
 def test_dropout3d_f():
-    return TestInterface(lambda x: nn.functional.dropout3d(x, training=False))
+    return TestInterface(lambda x: nn.functional.dropout3d((x+1), training=False))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3,3)])
-def test_dropout3d_m():
-    return nn.Dropout3d()

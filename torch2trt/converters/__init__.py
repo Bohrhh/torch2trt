@@ -22,13 +22,13 @@ from .div import *
 from .expand import *
 from .getitem import *
 from .identity import *
-from .instance_norm import *
+# from .instance_norm import *
 from .interpolate import *
 from .group_norm import *
 from .linear import *
 from .log_softmax import *
 from .max import *
-from .max_pool2d import *
+from .max_pool import *
 from .mean import *
 from .min import *
 from .mul import *

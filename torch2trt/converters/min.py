@@ -24,9 +24,11 @@ def __convert_min_reduce(ctx):
     input      = get_arg(ctx, 'input',   pos=0, default=None )
     dim        = get_arg(ctx, 'dim',     pos=1, default=None )
     keepdim    = get_arg(ctx, 'keepdim', pos=2, default=False)
-    output_val = ctx.method_return[0]
     if dim is not None:
+        output_val = ctx.method_return[0]
         output_idx = ctx.method_return[1]
+    else:
+        output_val = ctx.method_return
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
@@ -52,8 +54,8 @@ def __convert_min_reduce(ctx):
         shape = input.shape[:dim] + input.shape[dim+1:]
         layer_val.reshape_dims = tuple(shape)
         layer_idx.reshape_dims = tuple(shape)
-        output_val._trt = layer.get_output(0)
-        output_idx._trt = layer.get_output(1)
+        output_val._trt = layer_val.get_output(0)
+        output_idx._trt = layer_idx.get_output(0)
 
 
 @tensorrt_converter('torch.min')
@@ -86,12 +88,12 @@ def test_min_reduce_dim2_idx():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 def test_min_reduce_dim1_keepdim_val():
-    return TestInterface(lambda x: torch.min(x, 1, keepdim=True)[0])    
+    return TestInterface(lambda x: torch.min(x, 1, keepdim=True)[0])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 def test_min_reduce_dim1_keepdim_idx():
-    return TestInterface(lambda x: torch.min(x, 1, keepdim=True)[1])  
+    return TestInterface(lambda x: torch.min(x, 1, keepdim=True)[1])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])

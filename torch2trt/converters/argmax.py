@@ -60,5 +60,5 @@ def test_argmax_tensor():
     return TestInterface(lambda x: x.argmax(dim=1, keepdim=True))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
-def test_argmax_tensor():
+def test_argmax_tensor_reduce():
     return TestInterface(lambda x: x.argmax())
