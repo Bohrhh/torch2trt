@@ -6,9 +6,9 @@ from torch2trt.utils import *
 @tensorrt_converter('torch.Tensor.argmax')
 def convert_argmax(ctx):
     # parse args
-    input = ctx.method_args[0]
-    output = ctx.method_return
-    dim = get_arg(ctx, 'dim', pos=1, default=None)
+    input   = ctx.method_args[0]
+    output  = ctx.method_return
+    dim     = get_arg(ctx, 'dim',     pos=1, default=None)
     keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
 
     # get tensorrt input
@@ -20,7 +20,7 @@ def convert_argmax(ctx):
         layer.reshape_dims = (-1, 1)
         input_trt = layer.get_output(0)
     
-    layer = ctx.network.add_topk(input_trt, trt.TopKOperation.MAX, 1, torch_dim_to_trt_axes(0 if dim is None else dim))
+    layer = ctx.network.add_topk(input_trt, trt.TopKOperation.MAX, 1, torch_dim_to_trt_axes(0 if dim is None else dim, input.dim()))
 
     if dim is None:
         layer = ctx.network.add_shuffle(layer.get_output(1))

@@ -76,11 +76,28 @@ def trt_num_outputs(engine):
     return count
 
 
-def torch_dim_to_trt_axes(dim):
-    """Converts torch dim, or tuple of dims to a tensorrt axes bitmask"""
+def convert_dim(dim, length):
+    """Converts negative dim
+    Args:
+        dim: int or tuple
+        length: length of input shape
+    """
+    if isinstance(dim, (tuple, list)):
+        dim = tuple([length+d if d<0 else d for d in dim])
+    else:
+        dim = length+dim if dim<0 else dim
+    return dim
+
+
+def torch_dim_to_trt_axes(dim, length):
+    """Converts torch dim, or tuple of dims to a tensorrt axes bitmask
+    Args:
+        dim: int or tuple
+        length: length of input shape
+    """
     if not isinstance(dim, tuple):
         dim = (dim,)
-
+    dim = convert_dim(dim, length)
     # create axes bitmask for reduce layer
     axes = 0
     for d in dim:

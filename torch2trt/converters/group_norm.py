@@ -10,10 +10,10 @@ def convert_group_norm_trt(ctx):
     # parse args
     module     = ctx.method_args[0]
     input      = ctx.method_args[1]
-    num_groups = module.num_groups
     weight     = module.weight if module.weight is not None else torch.ones(module.num_channels, dtype=torch.float32)
     bias       = module.bias if module.bias is not None else torch.zeros(module.num_channels, dtype=torch.float32)
     eps        = module.eps
+    num_groups = module.num_groups
     output     = ctx.method_return
 
     # get tensorrt input 
@@ -23,15 +23,14 @@ def convert_group_norm_trt(ctx):
     creator = trt.get_plugin_registry().get_plugin_creator('GroupNormalizationPlugin', '1')
     assert creator is not None, 'Has no GroupNormalizationPlugin version 1'
     fc = trt.PluginFieldCollection()
-    fc.append(trt.PluginField(name='epe', data=np.array(eps, dtype=np.float32), type=trt.PluginFieldType.FLOAT32))
-    fc.append(trt.PluginField(name='num_groups', data=np.array(num_groups, dtype=np.int32), type=trt.PluginFieldType.INT32))
+    fc.append(trt.PluginField(name='eps',        data=np.array([eps],        dtype=np.float32), type=trt.PluginFieldType.FLOAT32))
+    fc.append(trt.PluginField(name='num_groups', data=np.array([num_groups], dtype=np.int32  ), type=trt.PluginFieldType.INT32  ))
 
-    plugin = creator.create_plugin('group num', fc)
-
+    plugin = creator.create_plugin('group_num', fc)
     layer  = ctx.network.add_plugin_v2(inputs_trt, plugin)
-    
-    output._trt = layer.get_output(0)
 
+    # get tensorrt output
+    output._trt = layer.get_output(0)
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
@@ -42,5 +41,6 @@ def test_group_norm_trt_g2_fp32():
 def test_group_norm_trt_g2_eps_fp32():
     return torch.nn.GroupNorm(2, 10, eps=1e-4)
 
-
-    
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
+def test_group_norm_trt_g2_eps_fp32():
+    return torch.nn.GroupNorm(2, 10, eps=1e-4)

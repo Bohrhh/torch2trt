@@ -4,10 +4,6 @@ from .dummy_converters import *
 
 # supported converters will override dummy converters
 
-from .Conv import *
-from .ConvTranspose import *
-from .Linear import *
-from .LogSoftmax import *
 from .activation import *
 from .adaptive_avg_pool2d import *
 from .adaptive_max_pool2d import *
@@ -20,6 +16,8 @@ from .cat import *
 from .chunk import *
 from .clamp import *
 from .compare import *
+from .conv import *
+from .conv_transpose import *
 from .div import *
 from .expand import *
 from .getitem import *
@@ -27,6 +25,8 @@ from .identity import *
 from .instance_norm import *
 from .interpolate import *
 from .group_norm import *
+from .linear import *
+from .log_softmax import *
 from .max import *
 from .max_pool2d import *
 from .mean import *

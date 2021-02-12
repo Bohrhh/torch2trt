@@ -20,7 +20,7 @@ def convert_argmin(ctx):
         layer.reshape_dims = (-1, 1)
         input_trt = layer.get_output(0)
     
-    layer = ctx.network.add_topk(input_trt, trt.TopKOperation.MIN, 1, torch_dim_to_trt_axes(0 if dim is None else dim))
+    layer = ctx.network.add_topk(input_trt, trt.TopKOperation.MIN, 1, torch_dim_to_trt_axes(0 if dim is None else dim, input.dim()))
 
     if dim is None:
         layer = ctx.network.add_shuffle(layer.get_output(1))

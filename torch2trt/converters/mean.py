@@ -1,41 +1,23 @@
-from torch2trt.torch2trt import *
-from torch2trt.module_test import add_module_test
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
 
 
 @tensorrt_converter('torch.mean')
 @tensorrt_converter('torch.Tensor.mean')
 def convert_mean(ctx):
-    input = ctx.method_args[0]
-    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    output = ctx.method_return
+    # parse args
+    input   = get_arg(ctx, 'input',   pos=0, default=None )
+    dim     = get_arg(ctx, 'dim',     pos=1, default=tuple(range(len(input.shape))))
+    keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
+    output  = ctx.method_return
     
-    # get dims from args or kwargs
-    if 'dim' in ctx.method_kwargs: 
-        dim = ctx.method_kwargs['dim']
-    elif len(ctx.method_args) >= 2:
-        dim = ctx.method_args[1]
-        
-    # convert list to tuple
-    if isinstance(dim, list):
-        dim = tuple(dim)
-        
-    if not isinstance(dim, tuple):
-        dim = (dim, )
-        
-    # create axes bitmask for reduce layer
-    axes = 0
-    for d in dim:
-        axes |= 1 << (d - 1) # -1 to remove batch dimension
-        
-    # get whether to keep dimensions
-    if 'keepdim' in ctx.method_kwargs:
-        keep_dims = ctx.method_kwargs['keepdim']
-    elif len(ctx.method_args) == 3:
-        keep_dims = ctx.method_args[2]
-    else:
-        keep_dims = False
-        
-    layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.AVG, axes, keep_dims)
+    # get tensorrt input
+    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+
+    # add tensorrt layer
+    layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.AVG, torch_dim_to_trt_axes(dim, input.dim()), keepdim)
+
+    # get tensorrt output
     output._trt = layer.get_output(0)
 
     
