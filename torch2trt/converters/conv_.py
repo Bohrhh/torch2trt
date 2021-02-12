@@ -5,7 +5,7 @@ from torch2trt.utils import *
 @tensorrt_converter('torch.nn.Conv1d.forward', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.nn.Conv2d.forward', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.nn.Conv3d.forward', enabled=trt_version() >= '7.0')
-def convert_Conv_trt7(ctx):
+def convert_conv(ctx):
     # parse args
     module      = ctx.method_args[0]
     input       = ctx.method_args[1]
@@ -67,77 +67,77 @@ def convert_Conv_trt7(ctx):
 # =========================================
 # test conv1d 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0')
-def test_Conv1d_k1s1p0d1():
+def test_conv1d_k1s1p0d1():
     return torch.nn.Conv1d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0')
-def test_Conv1d_k3s1p0d1():
+def test_conv1d_k3s1p0d1():
     return torch.nn.Conv1d(10, 5, kernel_size=3, stride=1, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0')
-def test_Conv1d_k3s2p0d1():
+def test_conv1d_k3s2p0d1():
     return torch.nn.Conv1d(10, 5, kernel_size=3, stride=2, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0')
-def test_Conv1d_k3s2p1d1():
+def test_conv1d_k3s2p1d1():
     return torch.nn.Conv1d(10, 5, kernel_size=3, stride=2, padding=1, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0')
-def test_Conv1d_k3s2p1d2():
+def test_conv1d_k3s2p1d2():
     return torch.nn.Conv1d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0')
-def test_Conv1d_k3s2p1d2_nobias():
+def test_conv1d_k3s2p1d2_nobias():
     return torch.nn.Conv1d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2, bias=False)
 
 # =========================================
 # test conv2d 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0')
-def test_Conv2d_k1s1p0d1():
+def test_conv2d_k1s1p0d1():
     return torch.nn.Conv2d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0')
-def test_Conv2d_k3s1p0d1():
+def test_conv2d_k3s1p0d1():
     return torch.nn.Conv2d(10, 5, kernel_size=3, stride=1, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0')
-def test_Conv2d_k3s2p0d1():
+def test_conv2d_k3s2p0d1():
     return torch.nn.Conv2d(10, 5, kernel_size=3, stride=2, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0')
-def test_Conv2d_k3s2p1d1():
+def test_conv2d_k3s2p1d1():
     return torch.nn.Conv2d(10, 5, kernel_size=3, stride=2, padding=1, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0')
-def test_Conv2d_k3s2p1d2():
+def test_conv2d_k3s2p1d2():
     return torch.nn.Conv2d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0')
-def test_Conv2d_k3s2p1d2_nobias():
+def test_conv2d_k3s2p1d2_nobias():
     return torch.nn.Conv2d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2, bias=False)
 
 # =========================================
 # test conv3d 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
-def test_Conv3d_k1s1p0d1():
+def test_conv3d_k1s1p0d1():
     return torch.nn.Conv3d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
-def test_Conv3d_k3s1p0d1():
+def test_conv3d_k3s1p0d1():
     return torch.nn.Conv3d(10, 5, kernel_size=3, stride=1, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
-def test_Conv3d_k3s2p0d1():
+def test_conv3d_k3s2p0d1():
     return torch.nn.Conv3d(10, 5, kernel_size=3, stride=2, padding=0, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
-def test_Conv3d_k3s2p1d1():
+def test_conv3d_k3s2p1d1():
     return torch.nn.Conv3d(10, 5, kernel_size=3, stride=2, padding=1, dilation=1)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
-def test_Conv3d_k3s2p1d2():
+def test_conv3d_k3s2p1d2():
     return torch.nn.Conv3d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
-def test_Conv3d_k3s2p1d2_nobias():
+def test_conv3d_k3s2p1d2_nobias():
     return torch.nn.Conv3d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2, bias=False)
