@@ -19,9 +19,15 @@ def convert_functional_relu6(ctx):
     output._trt = layer.get_output(0)
 
 
+@tensorrt_converter('torch.nn.ReLU6.forward')
+def convert_relu6(ctx):
+    ctx.method_args = ctx.method_args[1:]
+    convert_functional_relu6(ctx)
+
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
 def test_relu6_basic():
-    return torch.nn.ReLU6()    
+    return torch.nn.ReLU6()
     
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
 def test_functional_relu6_basic():
