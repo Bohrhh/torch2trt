@@ -1,10 +1,8 @@
-import torch
-import tensorrt as trt
 import copy
-import numpy as np
-import io
-from collections import defaultdict
+import torch
 import importlib
+import tensorrt as trt
+from collections import defaultdict
 from .utils import *
 
 from .calibration import (
