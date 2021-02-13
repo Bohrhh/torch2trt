@@ -15,7 +15,7 @@ def convert_max_pool(ctx):
     ceil_mode      = get_arg(ctx, 'ceil_mode',         pos=5, default=False)
     return_indices = get_arg(ctx, 'return_indices',    pos=6, default=False)
     output         = ctx.method_return
-    assert dilation==1 and return_indices==Falsem
+    assert dilation==1 and return_indices==False
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]

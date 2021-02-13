@@ -3,6 +3,8 @@ from torch2trt.utils import *
 
 
 @tensorrt_converter('torch.transpose', enabled=trt_version() >= '7.0')
+@tensorrt_converter('torch.Tensor.transpose', enabled=trt_version() >= '7.0')
+@tensorrt_converter('torch.Tensor.transpose_', enabled=trt_version() >= '7.0')
 def convert_transpose(ctx):
     # parse args
     input  = ctx.method_args[0]
@@ -26,10 +28,15 @@ def convert_transpose(ctx):
 
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)])
-def test_transpose_02():
-    return TestInterface(lambda x: x.transpose(x, 0, 2))
+def test_torch_transpose_02():
+    return TestInterface(lambda x: x.transpose(1, 2))
 
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)])
-def test_transpose_12():
-    return TestInterface(lambda x: x.transpose(x, 1, 2))
+def test_tensor_transpose_02():
+    return TestInterface(lambda x: x.transpose(0, 2))
+
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3)])
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)])
+def test_tensor_transpose_12():
+    return TestInterface(lambda x: x.transpose(1, 2))

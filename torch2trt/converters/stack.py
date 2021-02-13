@@ -30,9 +30,9 @@ def convert_cat(ctx):
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 4, 4), (1, 4, 4)], enabled=trt_version() >= '7.0')
-def test_Stack_dim1():
+def test_stack_dim1():
     return TestInterface(lambda *x: torch.stack(x, dim=1))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 4, 4), (1, 4, 4)], enabled=trt_version() >= '7.0')
-def test_Stack_dim3():
+def test_stack_dim3():
     return TestInterface(lambda *x: torch.stack(x, dim=3))
