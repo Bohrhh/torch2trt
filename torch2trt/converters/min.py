@@ -69,31 +69,17 @@ def convert_min(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_min_reduce_dim1_val():
-    return TestInterface(lambda x: torch.min(x, 1)[0])
+def test_min_reduce_dim1():
+    return TestInterface(lambda x: torch.min(x, 1))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
+def test_min_reduce_dim2():
+    return TestInterface(lambda x: torch.min(x, 2))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_min_reduce_dim1_idx():
-    return TestInterface(lambda x: torch.min(x, 1)[1])
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_min_reduce_dim2_val():
-    return TestInterface(lambda x: torch.min(x, 2)[0])
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_min_reduce_dim2_idx():
-    return TestInterface(lambda x: torch.min(x, 2)[1])
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_min_reduce_dim1_keepdim_val():
-    return TestInterface(lambda x: torch.min(x, 1, keepdim=True)[0])
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_min_reduce_dim1_keepdim_idx():
-    return TestInterface(lambda x: torch.min(x, 1, keepdim=True)[1])
+def test_min_reduce_dim1_keepdim():
+    return TestInterface(lambda x: torch.min(x, 1, keepdim=True))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])

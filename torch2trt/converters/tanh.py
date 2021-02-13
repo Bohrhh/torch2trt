@@ -1,15 +1,21 @@
-from torch2trt.torch2trt import *
-from torch2trt.module_test import add_module_test
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
 
 
 @tensorrt_converter('torch.nn.functional.tanh')
 @tensorrt_converter('torch.tanh')
 def convert_tanh(ctx):
-    input = ctx.method_args[0]
-    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    # parse args
+    input  = ctx.method_args[0]
     output = ctx.method_return
+
+    # get tensorrt input
+    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
     
+    # add tensorrt output
     layer = ctx.network.add_activation(input_trt, trt.ActivationType.TANH)
+
+    # get tensorrt output
     output._trt = layer.get_output(0)
     
 

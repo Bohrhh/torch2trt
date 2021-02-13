@@ -1,26 +1,23 @@
-from torch2trt.torch2trt import *
-from torch2trt.module_test import add_module_test
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
 
         
 def __convert_unary(ctx, op):
-    input = get_arg(ctx, 'input', pos=0, default=None)
-    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    # parse args
+    input  = get_arg(ctx, 'input', pos=0, default=None)
     output = ctx.method_return
+
+    # get tensorrt input
+    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+
+    # add tensorrt layer
     layer = ctx.network.add_unary(input_trt, op)
+
+    # get tensorrt output
     output._trt = layer.get_output(0)
     
-
-class UnaryModule(torch.nn.Module):
-    def __init__(self, fn):
-        super(UnaryModule, self).__init__()
-        self.fn = fn
-        
-    def forward(self, x):
-        return self.fn(x)
     
 # EXP : Exponentiation
-
-
 @tensorrt_converter('torch.exp')
 @tensorrt_converter('torch.exp_')
 @tensorrt_converter('torch.Tensor.exp')
@@ -31,12 +28,10 @@ def convert_exp(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_exp():
-    return UnaryModule(lambda x: torch.exp(x))
+    return TestInterface(lambda x: torch.exp(x))
 
 
 #  LOG : Log (base e)
-
-
 @tensorrt_converter('torch.log')
 @tensorrt_converter('torch.log_')
 @tensorrt_converter('torch.Tensor.log')
@@ -47,12 +42,10 @@ def convert_log(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_log():
-    return UnaryModule(lambda x: torch.log(x))
+    return TestInterface(lambda x: torch.log(x))
 
 
 # SQRT : Square root
-
-
 @tensorrt_converter('torch.sqrt')
 @tensorrt_converter('torch.sqrt_')
 @tensorrt_converter('torch.Tensor.sqrt')
@@ -63,12 +56,10 @@ def convert_sqrt(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_sqrt():
-    return UnaryModule(lambda x: torch.sqrt(x))
+    return TestInterface(lambda x: torch.sqrt(x))
 
 
 # RECIP : Reciprocal
-
-
 @tensorrt_converter('torch.reciprocal')
 @tensorrt_converter('torch.reciprocal_')
 @tensorrt_converter('torch.Tensor.reciprocal')
@@ -79,12 +70,10 @@ def convert_reciprocal(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_reciprocal():
-    return UnaryModule(lambda x: torch.reciprocal(x))
+    return TestInterface(lambda x: torch.reciprocal(x))
 
 
 # ABS : Absolute value
-
-
 @tensorrt_converter('torch.abs')
 @tensorrt_converter('torch.abs_')
 @tensorrt_converter('torch.Tensor.abs')
@@ -95,11 +84,10 @@ def convert_abs(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_abs():
-    return UnaryModule(lambda x: torch.abs(x))
+    return TestInterface(lambda x: torch.abs(x))
 
 
 #  NEG : Negation
-
 @tensorrt_converter('torch.neg')
 @tensorrt_converter('torch.neg_')
 @tensorrt_converter('torch.Tensor.neg')
@@ -111,12 +99,10 @@ def convert_neg(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_neg():
-    return UnaryModule(lambda x: torch.neg(x))
+    return TestInterface(lambda x: torch.neg(x))
 
 
 #  SIN : Sine
-
-
 @tensorrt_converter('torch.sin')
 @tensorrt_converter('torch.sin_')
 @tensorrt_converter('torch.Tensor.sin')
@@ -127,12 +113,10 @@ def convert_sin(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_sin():
-    return UnaryModule(lambda x: torch.sin(x))
+    return TestInterface(lambda x: torch.sin(x))
 
 
 #  COS : Cosine
-
-
 @tensorrt_converter('torch.cos')
 @tensorrt_converter('torch.cos_')
 @tensorrt_converter('torch.Tensor.cos')
@@ -143,12 +127,10 @@ def convert_cos(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_cos():
-    return UnaryModule(lambda x: torch.cos(x))
+    return TestInterface(lambda x: torch.cos(x))
 
 
 #  |    TAN : Tangent
-
-
 @tensorrt_converter('torch.tan')
 @tensorrt_converter('torch.tan_')
 @tensorrt_converter('torch.Tensor.tan')
@@ -159,12 +141,10 @@ def convert_cos(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_tan():
-    return UnaryModule(lambda x: torch.tan(x))
+    return TestInterface(lambda x: torch.tan(x))
 
 
 #  |    SINH : Hyperbolic sine
-
-
 @tensorrt_converter('torch.sinh')
 @tensorrt_converter('torch.sinh_')
 @tensorrt_converter('torch.Tensor.sinh')
@@ -175,12 +155,10 @@ def convert_sinh(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_sinh():
-    return UnaryModule(lambda x: torch.sinh(x))
+    return TestInterface(lambda x: torch.sinh(x))
 
 
 #  |    COSH : Hyperbolic cosine
-
-
 @tensorrt_converter('torch.cosh')
 @tensorrt_converter('torch.cosh_')
 @tensorrt_converter('torch.Tensor.cosh')
@@ -191,12 +169,10 @@ def convert_cosh(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_cosh():
-    return UnaryModule(lambda x: torch.cosh(x))
+    return TestInterface(lambda x: torch.cosh(x))
 
 
 #  |    ASIN : Inverse sine
-
-
 @tensorrt_converter('torch.asin')
 @tensorrt_converter('torch.asin_')
 @tensorrt_converter('torch.Tensor.asin')
@@ -207,12 +183,10 @@ def convert_asin(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_asin():
-    return UnaryModule(lambda x: torch.asin(x))
+    return TestInterface(lambda x: torch.asin(x))
 
 
 #  |    ACOS : Inverse cosine
-
-
 @tensorrt_converter('torch.acos')
 @tensorrt_converter('torch.acos_')
 @tensorrt_converter('torch.Tensor.acos')
@@ -223,12 +197,10 @@ def convert_acos(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_acos():
-    return UnaryModule(lambda x: torch.acos(x))
+    return TestInterface(lambda x: torch.acos(x))
 
 
 #  |    ATAN : Inverse tangent
-
-
 @tensorrt_converter('torch.atan')
 @tensorrt_converter('torch.atan_')
 @tensorrt_converter('torch.Tensor.atan')
@@ -239,7 +211,7 @@ def convert_atan(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_atan():
-    return UnaryModule(lambda x: torch.atan(x))
+    return TestInterface(lambda x: torch.atan(x))
 
 
 #  |    ASINH : Inverse hyperbolic sine
@@ -250,8 +222,6 @@ def test_atan():
 #  |  
 
 #  CEIL : Ceiling
-
-
 @tensorrt_converter('torch.ceil')
 @tensorrt_converter('torch.ceil_')
 @tensorrt_converter('torch.Tensor.ceil')
@@ -262,12 +232,10 @@ def convert_ceil(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_ceil():
-    return UnaryModule(lambda x: torch.ceil(x))
+    return TestInterface(lambda x: torch.ceil(x))
 
 
 #  FLOOR : Floor
-        
-
 @tensorrt_converter('torch.floor')
 @tensorrt_converter('torch.floor_')
 @tensorrt_converter('torch.Tensor.floor')
@@ -278,4 +246,4 @@ def convert_floor(ctx):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_floor():
-    return UnaryModule(lambda x: torch.floor(x))
+    return TestInterface(lambda x: torch.floor(x))

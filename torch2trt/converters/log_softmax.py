@@ -10,9 +10,10 @@ def convert_log_softmax(ctx):
     # parse args
     input  = get_arg(ctx, 'input', pos=0, default=None) 
     dim    = get_arg(ctx, 'dim',   pos=1, default=None)
+    output = ctx.method_return
     assert dim is not None, 'Dim should be provided!'
     assert dim != 0, 'There is large error in test when dim is zero.'
-    output = ctx.method_return
+    
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
