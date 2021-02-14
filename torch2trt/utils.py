@@ -95,9 +95,9 @@ def torch_dim_to_trt_axes(dim, length):
         dim: int or tuple
         length: length of input shape
     """
+    dim = convert_dim(dim, length)
     if not isinstance(dim, tuple):
         dim = (dim,)
-    dim = convert_dim(dim, length)
     # create axes bitmask for reduce layer
     axes = 0
     for d in dim:

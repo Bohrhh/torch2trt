@@ -131,16 +131,19 @@ class ConversionContext(object):
         for hook in self.hooks:
             hook.__exit__(type, val, tb)
 
-    def add_inputs(self, torch_inputs, names=None):
+    def add_inputs(self, torch_inputs, names=None, dynamic_axes={}):
         if names is None:
             names = default_input_names(len(torch_inputs))
         self.input_names = names
 
         for i, torch_input in enumerate(torch_inputs):
             if not hasattr(torch_input, "_trt"):
+                trt_shape = torch_input.shape
+                for d in dynamic_axes:
+                    trt_shape[d] = -1
                 trt_tensor = self.network.add_input(
                     name=names[i],
-                    shape=tuple(torch_input.shape),
+                    shape=tuple(trt_shape),
                     dtype=torch_dtype_to_trt(torch_input.dtype),
                 )
                 trt_tensor.location = torch_device_to_trt(torch_input.device)
@@ -189,6 +192,8 @@ class TRTModule(torch.nn.Module):
         with trt.Logger() as logger, trt.Runtime(logger) as runtime:
             self.engine = runtime.deserialize_cuda_engine(engine_bytes)
             self.context = self.engine.create_execution_context()
+            self.context.active_optimization_profile = 0
+            
 
         self.input_names = state_dict[prefix + "input_names"]
         self.output_names = state_dict[prefix + "output_names"]
@@ -211,6 +216,7 @@ class TRTModule(torch.nn.Module):
         for i, input_name in enumerate(self.input_names):
             idx = self.engine.get_binding_index(input_name)
             bindings[idx] = inputs[i].contiguous().data_ptr()
+            self.context.set_binding_shape(idx, tuple(inputs[i].shape))
 
         self.context.execute_async_v2(
             bindings, torch.cuda.current_stream().cuda_stream
@@ -232,6 +238,7 @@ def torch2trt(module,
               inputs, 
               input_names=None, 
               output_names=None, 
+              dynamic_axes={},
               log_level=trt.Logger.ERROR, 
               max_batch_size=32,
               fp16_mode=False, 
@@ -242,34 +249,59 @@ def torch2trt(module,
               int8_calib_dataset=None,
               int8_calib_algorithm=DEFAULT_CALIBRATION_ALGORITHM,
               int8_calib_batch_size=1):
+    """
+    Args:
+        dynamic_axes (dict): {dim1: [min1, max1],
+                              dim2: [min2, max2]}
+    """
 
+    # ==================================================================
+    # prepare input and output
     inputs_in = inputs
 
     # copy inputs to avoid modifications to source data
     inputs = [tensor.clone() for tensor in inputs]  # only run single entry
 
-    logger = trt.Logger(log_level)
-    builder = trt.Builder(logger)
-    
     if isinstance(inputs, list):
         inputs = tuple(inputs)
     if not isinstance(inputs, tuple):
         inputs = (inputs,)
-        
+
     # run once to get num outputs
     outputs = module(*inputs)
-    if not isinstance(outputs, tuple) and not isinstance(outputs, list):
+    if isinstance(outputs, list):
+        outputs = tuple(outputs)
+    if not isinstance(outputs, tuple):
         outputs = (outputs,)
         
     if input_names is None:
         input_names = default_input_names(len(inputs))
     if output_names is None:
         output_names = default_output_names(len(outputs))
-        
+
+    # ==================================================================
+    # tensorrt
+    logger  = trt.Logger(log_level)
+    builder = trt.Builder(logger)
     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+    config  = builder.create_builder_config()
+
+    # dynamic shape profile
+    if len(dynamic_axes)>0:
+        profile = builder.create_optimization_profile()
+        for i in range(len(inputs)):
+            opt_shape = inputs[i].shape
+            min_shape = list(opt_shape)
+            max_shape = list(opt_shape)
+            for d, v in dynamic_axes.items():
+                min_shape[d] = v[0]
+                max_shape[d] = v[1]
+            profile.set_shape(input_names[i], min_shape, opt_shape, max_shape) 
+        config.add_optimization_profile(profile)
+
     with ConversionContext(network) as ctx:
 
-        ctx.add_inputs(inputs, input_names)
+        ctx.add_inputs(inputs, input_names, dynamic_axes=dynamic_axes)
 
         outputs = module(*inputs)
 
@@ -277,8 +309,9 @@ def torch2trt(module,
             outputs = (outputs,)
         ctx.mark_outputs(outputs, output_names)
 
-    builder.max_workspace_size = max_workspace_size
-    builder.fp16_mode = fp16_mode
+    config.max_workspace_size = max_workspace_size
+    if builder.platform_has_fast_fp16 and fp16_mode:
+        config.set_flag(trt.BuilderFlag.FP16)
     builder.max_batch_size = max_batch_size
     builder.strict_type_constraints = strict_type_constraints
 
@@ -295,7 +328,7 @@ def torch2trt(module,
             inputs, int8_calib_dataset, batch_size=int8_calib_batch_size, algorithm=int8_calib_algorithm
         )
 
-    engine = builder.build_cuda_engine(network)
+    engine = builder.build_engine(network, config)
 
     module_trt = TRTModule(engine, input_names, output_names)
 

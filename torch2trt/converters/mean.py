@@ -44,6 +44,11 @@ def test_mean_tensor_reduce():
 def test_mean_torch_d1_d2():
     return TestInterface(lambda x: torch.mean(x, dim=(1,2), keepdim=False))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+def test_mean_tensor_d1_d2():
+    return TestInterface(lambda x: x.mean(dim=[1, 2], keepdim=False))
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])

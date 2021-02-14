@@ -5,6 +5,7 @@ import argparse
 import traceback
 from termcolor import colored
 from torch2trt import torch2trt
+from torch2trt.tests.torchvision import classification
 from .utils import *
 
 

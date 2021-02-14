@@ -3,6 +3,7 @@ from torch2trt.utils import *
 
 
 @tensorrt_converter('torch.flatten')
+@tensorrt_converter('torch.Tensor.flatten')
 @tensorrt_converter('torch.Tensor.reshape')
 @tensorrt_converter('torch.Tensor.view')
 @tensorrt_converter('torch.Tensor.squeeze')
@@ -19,7 +20,7 @@ def convert_view(ctx):
 
     # add tensorrt layer
     layer = ctx.network.add_shuffle(input_trt)
-    layer.reshape_dims = tuple(output.shape[1:])
+    layer.reshape_dims = tuple(output.shape)
 
     # get tensorrt output
     output._trt = layer.get_output(0)
@@ -28,8 +29,22 @@ def convert_view(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+def test_flatten_1d():
+    return TestInterface(lambda x: x.flatten(1))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(2, 3, 3, 3)])
+def test_flatten_batch2_1d():
+    return TestInterface(lambda x: x.flatten(1))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
 def test_view_1d():
     return TestInterface(lambda x: x.view(1, -1))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(2, 3, 3, 3)])
+def test_view_batch2_1d():
+    return TestInterface(lambda x: x.view(2, -1))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
