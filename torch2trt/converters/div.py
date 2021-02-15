@@ -47,6 +47,10 @@ def convert_rdiv(ctx):
 def test_div_basic():
     return TestInterface(lambda x, y: x / y)
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_div_dynamic():
+    return TestInterface(lambda x, y: x / y)
+
 class IDiv(torch.nn.Module):
     def __init__(self):
         super(IDiv, self).__init__()
@@ -59,16 +63,24 @@ class IDiv(torch.nn.Module):
 def test_div_idiv():
     return IDiv()
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_div_idiv_dynamic():
+    return IDiv()
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
-def test_div_torchdiv():
+def test_div_torch():
     return TestInterface(lambda x, y: torch.div(x, y))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_rdiv_int():
     return TestInterface(lambda x: 10 / x)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_rdiv_float():
+    return TestInterface(lambda x: 10.0 / x)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_rdiv_float_dynamic():
     return TestInterface(lambda x: 10.0 / x)
 
 class DivConstantNoBatch(torch.nn.Module):
@@ -83,6 +95,10 @@ class DivConstantNoBatch(torch.nn.Module):
 def test_div_constant_nobatch():
     return DivConstantNoBatch()
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)], dynamic_axes={0:[1,32], 2:[10,40], 3:[10,40]})
+def test_div_constant_nobatch_dynamic():
+    return DivConstantNoBatch()
+
 class DivConstantBatch(torch.nn.Module):
     def __init__(self):
         super(DivConstantBatch, self).__init__()
@@ -93,4 +109,8 @@ class DivConstantBatch(torch.nn.Module):
     
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)])
 def test_div_constant_batch():
+    return DivConstantBatch()
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)], dynamic_axes={0:[1,32], 2:[10,40], 3:[10,40]})
+def test_div_constant_batch_dynamic():
     return DivConstantBatch()

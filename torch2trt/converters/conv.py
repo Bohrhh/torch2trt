@@ -20,6 +20,7 @@ def convert_conv(ctx):
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert input_trt.shape[1]!=-1, "Conv channel dimension should be constant"
     
     # add tensorrt layer
     input_dim = input.dim() - 2
@@ -34,8 +35,9 @@ def convert_conv(ctx):
 
     # if conv1d, reshape to 2D
     if input_dim == 1:
+        assert all([i!=-1 for i in input_trt.shape]), "Conv1d do not support dynamic shape"
         layer              = ctx.network.add_shuffle(input_trt)
-        layer.reshape_dims = tuple(input.shape)+(1,)
+        layer.reshape_dims = tuple(input_trt.shape)+(1,)
         input_trt          = layer.get_output(0)
         kernel_size        = kernel_size + (1, )
         stride             = stride + (1, )

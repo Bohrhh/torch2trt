@@ -11,14 +11,15 @@ def convert_expand(ctx):
 
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert all([i!=-1 for i in input_trt.shape]), "Expand do not support dynamic shape"
 
     # add tensorrt layer
-    inshape = tuple(input.shape) # exclude batch
-    shape   = tuple(output.shape)
-    ndim    = len(shape)
-    start   = tuple([0]*ndim)
-    stride  = tuple([int(i == o) for i, o in zip(inshape, shape)])  # stride == 1 if dimensions match, 0 otherwise
-    layer = ctx.network.add_slice(input_trt, start, shape, stride)
+    inshape  = tuple(input.shape) # exclude batch
+    outshape = tuple([i if i!=-1 else j for i,j in zip(sizes, input_trt.shape)])
+    ndim     = len(outshape)
+    start    = tuple([0]*ndim)
+    stride   = tuple([int(i == o) for i, o in zip(inshape, outshape)])  # stride == 1 if dimensions match, 0 otherwise
+    layer    = ctx.network.add_slice(input_trt, start, outshape, stride)
     
     # get tensorrt output
     output._trt = layer.get_output(0)

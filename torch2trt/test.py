@@ -3,6 +3,7 @@ import time
 import runpy
 import argparse
 import traceback
+import numpy as np
 from termcolor import colored
 from torch2trt import torch2trt
 from torch2trt.tests.torchvision import classification
@@ -21,16 +22,18 @@ def run(self):
     for shape in self.input_shapes:
         inputs_conversion += (torch.zeros(shape).to(self.device).type(self.dtype), )
         
-    
     # convert module
-    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 20,  **self.torch2trt_kwargs)
+    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 31,  **self.torch2trt_kwargs)
 
     # create inputs for torch/trt.. copy of inputs to handle inplace ops
     inputs = ()
     for shape in self.input_shapes:
+        if "dynamic_axes" in self.torch2trt_kwargs:
+            shape = list(shape)
+            for i, v in self.torch2trt_kwargs["dynamic_axes"].items():
+                shape[i] = np.random.randint(v[0], v[1]+1)
         inputs += (torch.randn(shape).to(self.device).type(self.dtype), )
     inputs_trt = tuple([tensor.clone() for tensor in inputs])
-
 
     # test output against original
     outputs = module(*inputs)
