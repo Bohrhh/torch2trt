@@ -106,13 +106,6 @@ def torch_dim_to_trt_axes(dim, length):
     return axes
 
 
-def add_trt_constant(network, tensor):
-    shape = tuple(tensor.shape[1:])
-    array = tensor[0].detach().cpu().numpy()
-    layer = network.add_constant(shape, array)
-    return layer.get_output(0)
-
-
 def check_torch_dtype(*tensors):
     dtype = None
     for t in tensors:

@@ -4,7 +4,7 @@ from torch2trt.utils import *
 @tensorrt_converter('torch.nn.functional.avg_pool1d', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.nn.functional.avg_pool2d', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.nn.functional.avg_pool3d', enabled=trt_version() >= '7.0')
-def convert_avg_pool_trt7(ctx):
+def convert_avg_pool(ctx):
     # parse args
     input             = get_arg(ctx, 'input'      ,       pos=0, default=None )
     kernel_size       = get_arg(ctx, 'kernel_size',       pos=1, default=None )
@@ -28,8 +28,9 @@ def convert_avg_pool_trt7(ctx):
 
     # if avg_pool1d, reshape to 2D
     if input_dim == 1:
+        assert sum([i==-1 for i in input_trt.shape])<=1, "Avg_pool1d only support one dynamic dim"
         layer              = ctx.network.add_shuffle(input_trt)
-        layer.reshape_dims = tuple(input.shape)+(1,)
+        layer.reshape_dims = tuple(input_trt.shape)+(1,)
         input_trt          = layer.get_output(0)
         kernel_size        = kernel_size + (1, )
         stride             = stride + (1, )
@@ -81,8 +82,8 @@ def test_avg_pool1d_k3s2p1():
 def test_avg_pool1d_k3s2p1_with_ceil_mode():
     return torch.nn.AvgPool1d(kernel_size=3, stride=2, padding=1, ceil_mode=True, count_include_pad=False)
 
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[4,40]})
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[5,50]})
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32]})
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5)], enabled=trt_version() >= '7.0', dynamic_axes={2:[5,50]})
 def test_avg_pool1d_k1s1p0_dynamic():
     return torch.nn.AvgPool1d(kernel_size=1, stride=1, padding=0, ceil_mode=False, count_include_pad=True)
 

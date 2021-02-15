@@ -12,6 +12,7 @@ def convert_split(ctx):
     
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert all([i!=-1 for i in input_trt.shape]), "Split do not support dynamic shape"
     
     start  = [0] * input.dim() # exclude batch
     stride = [1] * len(start)

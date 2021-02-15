@@ -74,10 +74,6 @@ class AddConstantNoBatch(torch.nn.Module):
 def test_add_constant_nobatch():
     return AddConstantNoBatch()
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)], dynamic_axes={0:[1,32], 2:[10,40], 3:[10,40]})
-def test_add_constant_nobatch_dynamic():
-    return AddConstantNoBatch()
-
 class AddConstantBatch(torch.nn.Module):
     def __init__(self):
         super(AddConstantBatch, self).__init__()
@@ -88,8 +84,4 @@ class AddConstantBatch(torch.nn.Module):
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)])
 def test_add_constant_batch():
-    return AddConstantBatch()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)], dynamic_axes={0:[1,32], 2:[10,40], 3:[10,40]})
-def test_add_constant_batch_dynamic():
     return AddConstantBatch()

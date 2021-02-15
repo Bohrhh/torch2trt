@@ -95,10 +95,6 @@ class DivConstantNoBatch(torch.nn.Module):
 def test_div_constant_nobatch():
     return DivConstantNoBatch()
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)], dynamic_axes={0:[1,32], 2:[10,40], 3:[10,40]})
-def test_div_constant_nobatch_dynamic():
-    return DivConstantNoBatch()
-
 class DivConstantBatch(torch.nn.Module):
     def __init__(self):
         super(DivConstantBatch, self).__init__()
@@ -109,8 +105,4 @@ class DivConstantBatch(torch.nn.Module):
     
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)])
 def test_div_constant_batch():
-    return DivConstantBatch()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)], dynamic_axes={0:[1,32], 2:[10,40], 3:[10,40]})
-def test_div_constant_batch_dynamic():
     return DivConstantBatch()
