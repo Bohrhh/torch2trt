@@ -62,3 +62,17 @@ def test_argmax_tensor():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
 def test_argmax_tensor_reduce():
     return TestInterface(lambda x: x.argmax())
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_argmax_dim1_dynamic():
+    return TestInterface(lambda x: torch.argmax(x, dim=1, keepdim=False))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_argmax_dim2_dynamic():
+    return TestInterface(lambda x: torch.argmax(x, dim=2, keepdim=False))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_argmax_tensor_reduce_dynamic():
+    return TestInterface(lambda x: x.argmax())
