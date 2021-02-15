@@ -60,3 +60,11 @@ def test_eq_tensor():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)], enabled=trt_version() >= '7.0')
 def test_eq_float():
     return TestInterface(lambda x: x==0.1)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
+def test_gt_tensor_dynamic():
+    return TestInterface(lambda x, y: x>y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
+def test_gt_float_dynamic():
+    return TestInterface(lambda x: x>0.1)

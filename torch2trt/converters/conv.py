@@ -90,6 +90,10 @@ def test_conv1d_k3s2p1d2():
 def test_conv1d_k3s2p1d2_nobias():
     return torch.nn.Conv1d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2, bias=False)
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[100,400]})
+def test_conv1d_k1s1p0d1_dynamic():
+    return torch.nn.Conv1d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
+
 # =========================================
 # test conv2d 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0')
@@ -116,6 +120,10 @@ def test_conv2d_k3s2p1d2():
 def test_conv2d_k3s2p1d2_nobias():
     return torch.nn.Conv2d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2, bias=False)
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_conv2d_k1s1p0d1_dynamic():
+    return torch.nn.Conv2d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
+
 # =========================================
 # test conv3d 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
@@ -141,3 +149,7 @@ def test_conv3d_k3s2p1d2():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0')
 def test_conv3d_k3s2p1d2_nobias():
     return torch.nn.Conv3d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2, bias=False)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 64, 64, 64)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[64,100], 3:[64,100], 4:[64,100]})
+def test_conv3d_k1s1p0d1_dynamic():
+    return torch.nn.Conv3d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)

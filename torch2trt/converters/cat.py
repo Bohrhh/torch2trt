@@ -24,3 +24,7 @@ def convert_cat(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 3, 4), (1, 17, 4)])
 def test_cat_basic():
     return TestInterface(lambda *x: torch.cat(x, dim=1))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 3, 4), (1, 17, 4)], dynamic_axes={0:[1,32], 1:[1, 40]})
+def test_cat_dynamic():
+    return TestInterface(lambda *x: torch.cat(x, dim=1))
