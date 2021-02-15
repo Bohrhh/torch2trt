@@ -36,8 +36,9 @@ def convert_batch_norm(ctx):
 
     # reshape back to 1D
     if input_dim == 1:
-        layer = ctx.network.add_shuffle(layer.get_output(0))
-        layer.reshape_dims = output.shape
+        output_trt = layer.get_output(0)
+        layer = ctx.network.add_shuffle(output_trt)
+        layer.reshape_dims = output_trt.shape[:-1]
 
     # get tensorrt output
     output._trt = layer.get_output(0)
