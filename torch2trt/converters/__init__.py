@@ -39,15 +39,11 @@ from .permute import *
 from .pow import *
 from .prelu import *
 from .prod import *
-from .relu import *
-from .relu6 import *
-from .sigmoid import *
 from .softmax import *
 from .split import *
 from .stack import *
 from .sub import *
 from .sum import *
-from .tanh import *
 from .transpose import *
 from .unary import *
 from .view import *

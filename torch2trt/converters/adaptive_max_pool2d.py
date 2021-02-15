@@ -40,17 +40,18 @@ def convert_adaptive_max_pool2d(ctx):
 def test_adaptive_max_pool2d_1x1():
     return torch.nn.AdaptiveMaxPool2d((1, 1))
 
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_adaptive_max_pool2d_2x2():
     return torch.nn.AdaptiveMaxPool2d((2, 2))
-
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 7, 7)])
 def test_adaptive_max_pool2d_3x3():
     return torch.nn.AdaptiveMaxPool2d((3, 3))
 
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 13, 13)])
 def test_adaptive_max_pool2d_4x4():
     return torch.nn.AdaptiveMaxPool2d((4, 4))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_adaptive_max_pool2d_dynamic():
+    return torch.nn.AdaptiveAvgPool2d((1, 1))
