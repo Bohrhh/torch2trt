@@ -35,7 +35,7 @@ def convert_conv(ctx):
 
     # if conv1d, reshape to 2D
     if input_dim == 1:
-        assert all([i!=-1 for i in input_trt.shape]), "Conv1d do not support dynamic shape"
+        assert sum([i==-1 for i in input_trt.shape])<=1, "Conv1d only support one dynamic dim"
         layer              = ctx.network.add_shuffle(input_trt)
         layer.reshape_dims = tuple(input_trt.shape)+(1,)
         input_trt          = layer.get_output(0)
@@ -60,8 +60,9 @@ def convert_conv(ctx):
 
     # reshape back to 1D
     if input_dim == 1:
-        layer = ctx.network.add_shuffle(layer.get_output(0))
-        layer.reshape_dims = output.shape
+        output_trt = layer.get_output(0)
+        layer = ctx.network.add_shuffle(output_trt)
+        layer.reshape_dims = output_trt.shape[:-1]
 
     output._trt = layer.get_output(0)
 
@@ -92,8 +93,12 @@ def test_conv1d_k3s2p1d2():
 def test_conv1d_k3s2p1d2_nobias():
     return torch.nn.Conv1d(10, 5, kernel_size=3, stride=2, padding=1, dilation=2, bias=False)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[100,400]})
-def test_conv1d_k1s1p0d1_dynamic():
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32]})
+def test_conv1d_k1s1p0d1_dynamic0():
+    return torch.nn.Conv1d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224)], enabled=trt_version() >= '7.0', dynamic_axes={2:[100,400]})
+def test_conv1d_k1s1p0d1_dynamic2():
     return torch.nn.Conv1d(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
 
 # =========================================
