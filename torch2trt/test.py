@@ -27,11 +27,14 @@ def run(self):
 
     # create inputs for torch/trt.. copy of inputs to handle inplace ops
     inputs = ()
+    dynamic_shape = []
+    if "dynamic_axes" in self.torch2trt_kwargs:
+        for i, v in self.torch2trt_kwargs["dynamic_axes"].items():
+            dynamic_shape.append([i, np.random.randint(v[0], v[1]+1)])
     for shape in self.input_shapes:
-        if "dynamic_axes" in self.torch2trt_kwargs:
-            shape = list(shape)
-            for i, v in self.torch2trt_kwargs["dynamic_axes"].items():
-                shape[i] = np.random.randint(v[0], v[1]+1)
+        shape = list(shape)
+        for d in dynamic_shape:
+            shape[d[0]] = d[1]
         inputs += (torch.randn(shape).to(self.device).type(self.dtype), )
     inputs_trt = tuple([tensor.clone() for tensor in inputs])
 
