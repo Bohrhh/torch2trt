@@ -26,9 +26,9 @@ def convert_interpolate(ctx):
     shape = size
     if shape != None:
         if isinstance(shape, collections.Sequence):
-           shape  = list(input.shape[:2]) + list(shape)
+           shape  = list(input_trt.shape[:2]) + list(shape)
         else:
-            shape = list(input.shape[:2]) + [shape] * input_dim
+            shape = list(input_trt.shape[:2]) + [shape] * input_dim
 
         layer.shape = shape
 
@@ -36,7 +36,7 @@ def convert_interpolate(ctx):
     if scales != None:
         if not isinstance(scales, collections.Sequence):
             scales = [scales] * input_dim
-        shape = list(input.shape[:2]) + [input.size(i+2)*int(scales[i]) for i in range(input_dim)]
+        shape = list(input_trt.shape[:2]) + [input_trt.shape[i+2]*int(scales[i]) for i in range(input_dim)]
         # layer.scales = [1] + list(scales)
         layer.shape = shape
 
@@ -97,3 +97,7 @@ def test_interpolate_size_3d():
 @add_module_test(torch.float32, torch.device('cuda'), [(1,4,3,5,1)], enabled=trt_version() >= '7.1')
 def test_interpolate_size_odd_input_3d():
     return torch.nn.Upsample(size=[11,14,17], mode="trilinear", align_corners=False)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1', dynamic_axes={0:[1,32]})
+def test_interpolate_nearest_dynamic():
+    return torch.nn.Upsample(scale_factor=2, mode="nearest")

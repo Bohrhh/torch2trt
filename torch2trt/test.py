@@ -96,6 +96,8 @@ def run(self):
         outputs = module_trt(*inputs)
         torch.cuda.current_stream().synchronize()
     t1 = time.time()
+
+    torch.cuda.empty_cache()
     
     ms_trt = 1000.0 * (t1 - t0) / 50.0
     

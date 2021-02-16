@@ -27,16 +27,23 @@ def convert_identity(ctx):
 def test_tensor_contiguous():
     return TestInterface(lambda x: (x+1).contiguous())
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)], dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
+def test_tensor_contiguous_dynamic():
+    return TestInterface(lambda x: (x+1).contiguous())
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
-def test_dropout_f():
+def test_dropout():
     return TestInterface(lambda x: nn.functional.dropout((x+1), training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
-def test_dropout2d_f():
+def test_dropout2d():
     return TestInterface(lambda x: nn.functional.dropout2d((x+1), training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3,3)])
-def test_dropout3d_f():
+def test_dropout3d():
     return TestInterface(lambda x: nn.functional.dropout3d((x+1), training=False))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)], dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
+def test_dropout2d_dynamic():
+    return TestInterface(lambda x: nn.functional.dropout2d((x+1), training=False))

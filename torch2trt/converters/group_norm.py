@@ -33,14 +33,22 @@ def convert_group_norm_trt(ctx):
     output._trt = layer.get_output(0)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_trt_g2_fp32():
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
+def test_group_norm_g2_1d():
     return torch.nn.GroupNorm(2, 10)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_trt_g2_eps_fp32():
-    return torch.nn.GroupNorm(2, 10, eps=1e-4)
+def test_group_norm_g2_2d():
+    return torch.nn.GroupNorm(2, 10)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_trt_g2_eps_fp32():
+def test_group_norm_g2_eps_1d():
     return torch.nn.GroupNorm(2, 10, eps=1e-4)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
+def test_group_norm_g2_eps_2d():
+    return torch.nn.GroupNorm(2, 10, eps=1e-4)
+  
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3', dynamic_axes={0:[1,32], 2:[100,200]})
+def test_group_norm_g2_1d_dynamic():
+    return torch.nn.GroupNorm(2, 10)

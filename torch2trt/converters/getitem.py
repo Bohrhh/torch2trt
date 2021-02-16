@@ -30,6 +30,7 @@ def convert_tensor_getitem(ctx):
     
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert all([i!=-1 for i in input_trt.shape]), "Getitem do not support dynamic shape"
     
     # add tensorrt layer
     # Step 1 - Replace ellipsis with expanded slices
