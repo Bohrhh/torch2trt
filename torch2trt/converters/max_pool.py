@@ -88,7 +88,7 @@ def test_max_pool1d_k3s2p1_with_ceil_mode():
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32]})
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5)], enabled=trt_version() >= '7.0', dynamic_axes={2:[5,50]})
 def test_max_pool1d_k1s1p0_dynamic():
-    return torch.nn.MaxPool1d(kernel_size=1, stride=1, padding=0, ceil_mode=False, count_include_pad=True)
+    return torch.nn.MaxPool1d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
 
 # =========================================
 # test max_pool2d
@@ -120,7 +120,7 @@ def test_max_pool2d_k3s2p1_with_ceil_mode():
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[4,40], 3:[6,60]})
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[5,50], 3:[7,70]})
 def test_max_pool2d_k1s1p0_dynamic():
-    return torch.nn.MaxPool2d(kernel_size=1, stride=1, padding=0, ceil_mode=False, count_include_pad=True)
+    return torch.nn.MaxPool2d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
 
 # =========================================
 # test max_pool3d
@@ -152,4 +152,4 @@ def test_max_pool3d_k3s2p1_with_ceil_mode():
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6, 8)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[4,40], 3:[6,60], 4:[8, 80]})
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7, 9)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[5,50], 3:[7,70], 4:[9, 90]})
 def test_max_pool3d_k1s1p0_dynamic():
-    return torch.nn.MaxPool3d(kernel_size=1, stride=1, padding=0, ceil_mode=False, count_include_pad=True)
+    return torch.nn.MaxPool3d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
