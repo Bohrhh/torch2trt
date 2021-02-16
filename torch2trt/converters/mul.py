@@ -27,6 +27,10 @@ def convert_mul(ctx):
 def test_mul_basic():
     return TestInterface(lambda x, y: x*y)
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_mul_dynamic():
+    return TestInterface(lambda x, y: x*y)
+
 class IMul(torch.nn.Module):
     def __init__(self):
         super(IMul, self).__init__()
@@ -39,16 +43,24 @@ class IMul(torch.nn.Module):
 def test_mul_imul():
     return IMul()
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_mul_imul_dynamic():
+    return IMul()
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
 def test_mul_torchmul():
     return TestInterface(lambda x, y: torch.mul(x, y))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)])
 def test_rmul_int():
     return TestInterface(lambda x: 10*x)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)])
 def test_rmul_float():
+    return TestInterface(lambda x: 10.0*x)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_rmul_float_dynamic():
     return TestInterface(lambda x: 10.0*x)
 
 class MulConstantNoBatch(torch.nn.Module):

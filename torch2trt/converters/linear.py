@@ -13,6 +13,7 @@ def convert_Linear(ctx):
 
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert input_trt.shape[-1]!=-1, "Linear requires that the last dimension be build-time constant"
 
     # add tensorrt layer
     # reshape to ...xNx1x1
@@ -28,7 +29,7 @@ def convert_Linear(ctx):
 
     # reshape back to N
     layer = ctx.network.add_shuffle(layer.get_output(0))
-    layer.reshape_dims = tuple(output.shape)
+    layer.reshape_dims = (-1, kernel.shape[0])
 
     output._trt = layer.get_output(0)
 
@@ -44,3 +45,9 @@ def test_linear_basic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)])
 def test_linear_no_bias():
     return torch.nn.Linear(10, 5, bias=False)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)], dynamic_axes={0:[1,32]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)], dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], dynamic_axes={0:[1,32], 1:[3,30], 2:[4,40]})
+def test_linear_dynamic():
+    return torch.nn.Linear(10, 5)

@@ -18,6 +18,7 @@ def convert_interpolate(ctx):
 
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert all([i!=-1 for i in input_trt.shape]), "Interpolate does not support dynamic shape now"
     
     # add tensorrt layer
     input_dim = input.dim() - 2
@@ -97,7 +98,3 @@ def test_interpolate_size_3d():
 @add_module_test(torch.float32, torch.device('cuda'), [(1,4,3,5,1)], enabled=trt_version() >= '7.1')
 def test_interpolate_size_odd_input_3d():
     return torch.nn.Upsample(size=[11,14,17], mode="trilinear", align_corners=False)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1', dynamic_axes={0:[1,32]})
-def test_interpolate_nearest_dynamic():
-    return torch.nn.Upsample(scale_factor=2, mode="nearest")

@@ -18,6 +18,7 @@ def convert_group_norm_trt(ctx):
 
     # get tensorrt input 
     inputs_trt = add_missing_trt_tensors(ctx.network, [input, weight, bias])
+    assert all([i!=-1 for i in inputs_trt[0].shape]), "GroupNorm does not support dynamic shape now"
 
     # add tensorrt layer
     creator = trt.get_plugin_registry().get_plugin_creator('GroupNormalizationPlugin', '1')
@@ -48,7 +49,3 @@ def test_group_norm_g2_eps_1d():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
 def test_group_norm_g2_eps_2d():
     return torch.nn.GroupNorm(2, 10, eps=1e-4)
-  
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3', dynamic_axes={0:[1,32], 2:[100,200]})
-def test_group_norm_g2_1d_dynamic():
-    return torch.nn.GroupNorm(2, 10)

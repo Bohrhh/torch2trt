@@ -54,3 +54,7 @@ def test_mean_tensor_d1_d2():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
 def test_mean_torch_keepdim():
     return TestInterface(lambda x: torch.mean(x, dim=1, keepdim=True))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
+def test_mean_torch_d2_dynamic():
+    return TestInterface(lambda x: torch.mean(x, dim=2, keepdim=False))
