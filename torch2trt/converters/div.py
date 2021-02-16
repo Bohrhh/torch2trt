@@ -47,7 +47,7 @@ def convert_rdiv(ctx):
 def test_div_basic():
     return TestInterface(lambda x, y: x / y)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_div_dynamic():
     return TestInterface(lambda x, y: x / y)
 
@@ -63,7 +63,7 @@ class IDiv(torch.nn.Module):
 def test_div_idiv():
     return IDiv()
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_div_idiv_dynamic():
     return IDiv()
 
@@ -79,7 +79,7 @@ def test_rdiv_int():
 def test_rdiv_float():
     return TestInterface(lambda x: 1.0 / x)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_rdiv_float_dynamic():
     return TestInterface(lambda x: 1.0 / x)
 

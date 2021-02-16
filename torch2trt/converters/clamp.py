@@ -40,7 +40,7 @@ def test_torch_clamp_min():
 def test_tensor_clamp_min():
     return TestInterface(lambda x: x.clamp_min(-0.1))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def test_tensor_clamp_min_dynamic():
     return TestInterface(lambda x: x.clamp_min(-0.1))
 
@@ -72,7 +72,7 @@ def test_torch_clamp_max():
 def test_tensor_clamp_max():
     return TestInterface(lambda x: x.clamp_max(0.1))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def test_tensor_clamp_max_dynamic():
     return TestInterface(lambda x: x.clamp_max(0.1))
 
@@ -136,6 +136,6 @@ def test_tensor_clamp_option_min():
 def test_tensor_clamp_max_min():
     return TestInterface(lambda x: x.clamp(min=-0.1, max=0.1))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def test_tensor_clamp_max_min_dynamic():
     return TestInterface(lambda x: x.clamp(min=-0.1, max=0.1))

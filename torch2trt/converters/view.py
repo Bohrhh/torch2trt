@@ -42,7 +42,7 @@ def convert_flatten(ctx):
         flatten = -1
     else:
         flatten = reduce(lambda x,y:x*y, flatten)
-    shape = shape_pre+[flatten]+shape_post
+    shape = shape_pre+(flatten, )+shape_post
     assert sum([i==-1 for i in shape])<=1, "trt shuffle operation only support one -1 shape"    
 
     # add tensorrt layer

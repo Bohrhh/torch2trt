@@ -59,6 +59,6 @@ def test_adaptive_avg_pool2d_3x3():
 def test_adaptive_avg_pool2d_4x4():
     return torch.nn.AdaptiveAvgPool2d((4, 4))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def test_adaptive_avg_pool2d_dynamic():
     return torch.nn.AdaptiveAvgPool2d((1, 1))
