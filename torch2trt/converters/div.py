@@ -73,15 +73,15 @@ def test_div_torch():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_rdiv_int():
-    return TestInterface(lambda x: 10 / x)
+    return TestInterface(lambda x: 1 / x)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_rdiv_float():
-    return TestInterface(lambda x: 10.0 / x)
+    return TestInterface(lambda x: 1.0 / x)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
 def test_rdiv_float_dynamic():
-    return TestInterface(lambda x: 10.0 / x)
+    return TestInterface(lambda x: 1.0 / x)
 
 class DivConstantNoBatch(torch.nn.Module):
     def __init__(self):

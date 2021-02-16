@@ -46,3 +46,13 @@ def test_prelu_vector():
     m = torch.nn.PReLU(5)
     m.weight = torch.nn.Parameter(torch.randn(5)) # randn so each channel different
     return m
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
+def test_prelu_scalar_dynamic():
+    return torch.nn.PReLU()
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
+def test_prelu_vector_dynamic():
+    m = torch.nn.PReLU(5)
+    m.weight = torch.nn.Parameter(torch.randn(5)) # randn so each channel different
+    return m

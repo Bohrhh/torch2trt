@@ -28,14 +28,23 @@ def test_sum_reduce_all():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_sum_reduce_dim1():
+def test_sum_dim1():
     return TestInterface(lambda x: torch.sum(x, 1))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_sum_reduce_dim2():
+def test_sum_dim2():
     return TestInterface(lambda x: torch.sum(x, 2))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_sum_reduce_dim1_keepdim():
+def test_sum_dim1_keepdim():
     return TestInterface(lambda x: torch.sum(x, 1, keepdim=True))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30]})
+def test_sum_all_dynamic():
+    return TestInterface(lambda x: torch.sum(x))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30]})
+def test_sum_dim1_dynamic():
+    return TestInterface(lambda x: torch.sum(x, 1))
+  

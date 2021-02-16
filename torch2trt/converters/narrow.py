@@ -14,6 +14,7 @@ def convert_narrow(ctx):
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert all([i!=-1 for i in input_trt.shape]), "Narrow does not support dynamic shape"
 
     # add tensorrt layer
     shape   = list(input.shape)
@@ -35,5 +36,3 @@ def test_narrow1():
 @add_module_test(torch.float32, torch.device('cuda'), [(1,3,224,224)])
 def test_narrow2():
     return TestInterface(lambda x: torch.narrow(x, 2, 2, 50))
-
-

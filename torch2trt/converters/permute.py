@@ -58,3 +58,4 @@ def test_permute_list():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5, 6)])
 def test_permute_tuple():
     return TestInterface(lambda x: x.permute((0,4,1,3,2)))
+

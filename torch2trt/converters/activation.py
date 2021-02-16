@@ -92,7 +92,7 @@ def test_relu6_dynamic():
 @tensorrt_converter('torch.sigmoid')
 def convert_sigmoid(ctx):
     # parse args
-    input = ctx.method_args[0]
+    input  = ctx.method_args[0]
     output = ctx.method_return
 
     # get tensorrt input

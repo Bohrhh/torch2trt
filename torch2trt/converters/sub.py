@@ -44,6 +44,10 @@ def convert_rsub(ctx):
 def test_sub_basic():
     return TestInterface(lambda x, y: x-y)
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_sub_dynamic():
+    return TestInterface(lambda x, y: x-y)
+
 class ISub(torch.nn.Module):
     def __init__(self):
         super(ISub, self).__init__()
@@ -56,6 +60,10 @@ class ISub(torch.nn.Module):
 def test_sub_isub():
     return ISub()
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_sub_isub_dynamic():
+    return ISub()
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
 def test_torch_sub():
     return TestInterface(lambda x, y: torch.sub(x, y))
@@ -66,6 +74,10 @@ def test_rsub_int():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_rsub_float():
+    return TestInterface(lambda x: 1.0-x)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_rsub_float_dynamic():
     return TestInterface(lambda x: 1.0-x)
 
 class SubConstantNoBatch(torch.nn.Module):

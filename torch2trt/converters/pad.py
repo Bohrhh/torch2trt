@@ -28,3 +28,7 @@ def convert_pad(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_pad_basic():
     return TestInterface(lambda x: nn.functional.pad(x, (1, 2, 3, 4)))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[100,400], 3:[100,400]})
+def test_pad_dynamic():
+    return TestInterface(lambda x: nn.functional.pad(x, (1, 2, 3, 4)))

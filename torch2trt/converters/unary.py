@@ -135,7 +135,7 @@ def test_cos():
 @tensorrt_converter('torch.tan_')
 @tensorrt_converter('torch.Tensor.tan')
 @tensorrt_converter('torch.Tensor.tan_')
-def convert_cos(ctx):
+def convert_tan(ctx):
     __convert_unary(ctx, trt.UnaryOperation.TAN)
 
 

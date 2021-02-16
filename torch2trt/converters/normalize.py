@@ -51,3 +51,8 @@ def test_normalize_l1p5_basic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
 def test_normalize_l2_height():
     return TestInterface(lambda x: nn.functional.normalize(x, p=2.0, dim=2))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
+def test_normalize_l2_dynamic():
+    return TestInterface(lambda x: nn.functional.normalize(x, p=2.0))
