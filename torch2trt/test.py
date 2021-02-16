@@ -1,11 +1,13 @@
-from torch2trt import *
-from .module_test import ModuleTest, MODULE_TESTS
-import time
-import argparse
 import re
+import time
 import runpy
+import argparse
 import traceback
+import numpy as np
 from termcolor import colored
+from torch2trt import torch2trt
+from torch2trt.tests.torchvision import classification
+from .utils import *
 
 
 def run(self):
@@ -20,16 +22,21 @@ def run(self):
     for shape in self.input_shapes:
         inputs_conversion += (torch.zeros(shape).to(self.device).type(self.dtype), )
         
-    
     # convert module
-    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 20,  **self.torch2trt_kwargs)
+    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 31,  **self.torch2trt_kwargs)
 
     # create inputs for torch/trt.. copy of inputs to handle inplace ops
     inputs = ()
+    dynamic_shape = []
+    if "dynamic_axes" in self.torch2trt_kwargs:
+        for i, v in self.torch2trt_kwargs["dynamic_axes"].items():
+            dynamic_shape.append([i, np.random.randint(v[0], v[1]+1)])
     for shape in self.input_shapes:
+        shape = list(shape)
+        for d in dynamic_shape:
+            shape[d[0]] = d[1]
         inputs += (torch.randn(shape).to(self.device).type(self.dtype), )
     inputs_trt = tuple([tensor.clone() for tensor in inputs])
-
 
     # test output against original
     outputs = module(*inputs)
@@ -37,6 +44,8 @@ def run(self):
 
     if not isinstance(outputs, tuple):
         outputs = (outputs, )
+    if not isinstance(outputs_trt, tuple):
+        outputs_trt = (outputs_trt, )
     
     # compute max error
     max_error = 0
@@ -87,6 +96,8 @@ def run(self):
         outputs = module_trt(*inputs)
         torch.cuda.current_stream().synchronize()
     t1 = time.time()
+
+    torch.cuda.empty_cache()
     
     ms_trt = 1000.0 * (t1 - t0) / 50.0
     

@@ -1,23 +1,38 @@
-from torch2trt.torch2trt import *
-from torch2trt.module_test import add_module_test
-from .unary import UnaryModule
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
     
     
 @tensorrt_converter('torch.argmin')
 @tensorrt_converter('torch.Tensor.argmin')
 def convert_argmin(ctx):
+    # parse args
     input = ctx.method_args[0]
-    dim = get_arg(ctx, 'dim', pos=1, default=0)
-    assert dim!=0, "dim should not be 0"
-    keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
-    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
     output = ctx.method_return
-    layer = ctx.network.add_topk(input_trt, trt.TopKOperation.MIN, 1, torch_dim_to_trt_axes(dim))
-    if keepdim:
+    dim = get_arg(ctx, 'dim', pos=1, default=None)
+    keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
+
+    # get tensorrt input
+    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+
+    # add tensorrt layer
+    if dim is None:
+        layer = ctx.network.add_shuffle(input_trt)
+        layer.reshape_dims = (-1, 1)
+        input_trt = layer.get_output(0)
+    
+    layer = ctx.network.add_topk(input_trt, trt.TopKOperation.MIN, 1, torch_dim_to_trt_axes(0 if dim is None else dim, input.dim()))
+
+    if dim is None:
+        layer = ctx.network.add_shuffle(layer.get_output(1))
+        layer.reshape_dims = (1, )
+        output._trt = layer.get_output(0)
+    elif keepdim:
         output._trt = layer.get_output(1)
     else:
+        assert sum([i==-1 for i in input_trt.shape])<=1, \
+            "Argmin without keepdim only support one dynamic dim, please use keepdim for convenience"
         layer = ctx.network.add_shuffle(layer.get_output(1))
-        shape = input.shape[1:dim] + input.shape[dim+1:]
+        shape = input_trt.shape[:dim] + input_trt.shape[dim+1:]
         layer.reshape_dims = tuple(shape)
         output._trt = layer.get_output(0)
         
@@ -25,27 +40,41 @@ def convert_argmin(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 def test_argmin_dim1():
-    return UnaryModule(lambda x: torch.argmin(x, dim=1, keepdim=False))
-
+    return TestInterface(lambda x: torch.argmin(x, dim=1, keepdim=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
 def test_argmin_dim2():
-    return UnaryModule(lambda x: torch.argmin(x, dim=2, keepdim=False))
-
+    return TestInterface(lambda x: torch.argmin(x, dim=2, keepdim=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
 def test_argmin_dim3():
-    return UnaryModule(lambda x: torch.argmin(x, dim=3, keepdim=False))
-
+    return TestInterface(lambda x: torch.argmin(x, dim=3, keepdim=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
 def test_argmin_keepdim():
-    return UnaryModule(lambda x: torch.argmin(x, dim=1, keepdim=True))
-
+    return TestInterface(lambda x: torch.argmin(x, dim=1, keepdim=True))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
 def test_argmin_tensor():
-    return UnaryModule(lambda x: x.argmin(dim=1, keepdim=True))
+    return TestInterface(lambda x: x.argmin(dim=1, keepdim=True))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
+def test_argmin_tensor_reduce():
+    return TestInterface(lambda x: x.argmin())
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_argmin_dim1_dynamic():
+    return TestInterface(lambda x: torch.argmin(x, dim=1, keepdim=True))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)], dynamic_axes={0:[1,32]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={3:[5,50]})
+def test_argmin_dim2_dynamic():
+    return TestInterface(lambda x: torch.argmin(x, dim=2, keepdim=False))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_argmin_tensor_reduce_dynamic():
+    return TestInterface(lambda x: x.argmin())

@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from torch2trt.module_test import add_module_test
+from torch2trt.utils import add_module_test
 
     
 @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)

@@ -1,5 +1,5 @@
-from torch2trt.torch2trt import *
-from torch2trt.module_test import add_module_test
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
 
 
 def slice_to_trt(dim_size, dim_slice):
@@ -23,14 +23,17 @@ def num_slice_types(slices):
 
 @tensorrt_converter('torch.Tensor.__getitem__')
 def convert_tensor_getitem(ctx):
-    input = ctx.method_args[0]
+    # parse args
+    input  = ctx.method_args[0]
     slices = ctx.method_args[1]
     output = ctx.method_return
     
-    input_trt = input._trt
+    # get tensorrt input 
+    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
+    assert all([i!=-1 for i in input_trt.shape]), "Getitem do not support dynamic shape"
     
+    # add tensorrt layer
     # Step 1 - Replace ellipsis with expanded slices
-    
     num_ellipsis = len(input.shape) - num_slice_types(slices)
     
     new_slices = []
@@ -51,13 +54,9 @@ def convert_tensor_getitem(ctx):
     while num_slice_types(new_slices) < len(input.shape):
         new_slices.append(slice(None, None, None))
             
-    # Step 2 - Remove batch from slices (TRT from this point)
+    slices = tuple(new_slices)
     
-    slices = tuple(new_slices[1:]) # remove batch
-    
-    
-    # Step 3 - Add slice layer (will currently ignore 'None' slices)
-    
+    # Step 2 - Add slice layer (will currently ignore 'None' slices)
     starts = []
     sizes = []
     strides = []
@@ -85,71 +84,52 @@ def convert_tensor_getitem(ctx):
     
     output_trt = ctx.network.add_slice(input_trt, starts, sizes, strides).get_output(0)
     
-    # Step 4 - Add shuffle layer to insert dimensions for 'None' slices and remove dimensions for 'int' slices
-    
+    # Step 3 - Add shuffle layer to insert dimensions for 'None' slices and remove dimensions for 'int' slices
     num_non_slice = len([s for s in slices if not isinstance(s, slice)])
     if num_non_slice > 0:
         layer = ctx.network.add_shuffle(output_trt)
-        layer.reshape_dims = tuple(output.shape[1:]) # exclude batch
+        layer.reshape_dims = tuple(output.shape) # exclude batch
         output_trt = layer.get_output(0)
         
     output._trt = output_trt
-    
-    
-class LambdaModule(torch.nn.Module):
-    def __init__(self, fn):
-        super(LambdaModule, self).__init__()
-        self.fn = fn
         
-    def forward(self, x):
-        return self.fn(x)
-    
     
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_tensor_getitem_1d_int():
-    return LambdaModule(lambda x: x[:, 0])
-
+    return TestInterface(lambda x: x[:, 0])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_int():
-    return LambdaModule(lambda x: x[:, 0])
-
+    return TestInterface(lambda x: x[:, 0])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_strided():
-    return LambdaModule(lambda x: x[:, ::2])
-
+    return TestInterface(lambda x: x[:, ::2])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_strided_offset():
-    return LambdaModule(lambda x: x[:, 1::2])
-
+    return TestInterface(lambda x: x[:, 1::2])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_strided_range():
-    return LambdaModule(lambda x: x[:, 1:3:2])
-
+    return TestInterface(lambda x: x[:, 1:3:2])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_insert_dim():
-    return LambdaModule(lambda x: x[:, None])
-
+    return TestInterface(lambda x: x[:, None])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_insert_dim_ellipsis():
-    return LambdaModule(lambda x: x[:, None, ...])
-
+    return TestInterface(lambda x: x[:, None, ...])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_append_dim():
-    return LambdaModule(lambda x: x[:, ..., None])
-
+    return TestInterface(lambda x: x[:, ..., None])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_append_2dim():
-    return LambdaModule(lambda x: x[:, ..., None, None])
-
+    return TestInterface(lambda x: x[:, ..., None, None])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_weird_combo():
-    return LambdaModule(lambda x: x[:, 0:3:4, None, None, 1, ...])
+    return TestInterface(lambda x: x[:, 0:3:4, None, None, 1, ...])

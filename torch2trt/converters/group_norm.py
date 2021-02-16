@@ -1,48 +1,51 @@
-import torch.nn as nn
-from torch2trt.torch2trt import *                                 
-from torch2trt.module_test import add_module_test
-
-def has_group_norm_plugin():
-    try:
-        from torch2trt.plugins import GroupNormPlugin
-        return True
-    except:
-        return False
+import torch
+import numpy as np
+import tensorrt as trt
+from torch2trt.torch2trt import tensorrt_converter
+from torch2trt.utils import *
 
 
-def get_group_norm_plugin(num_groups, weight, bias, eps):
-    from torch2trt.plugins import GroupNormPlugin
-    PLUGIN_NAME = 'group_norm'
-    registry = trt.get_plugin_registry()
-    creator = [c for c in registry.plugin_creator_list if c.name == PLUGIN_NAME and c.plugin_namespace == 'torch2trt'][0]
-    torch2trt_plugin = GroupNormPlugin(num_groups=num_groups, weight=weight, bias=bias, eps=eps)
-    return creator.deserialize_plugin(PLUGIN_NAME, torch2trt_plugin.serializeToString())
-
-@tensorrt_converter('torch.nn.GroupNorm.forward', has_group_norm_plugin())
+@tensorrt_converter('torch.nn.GroupNorm.forward')
 def convert_group_norm_trt(ctx):
-    module = ctx.method_args[0]
-    input = ctx.method_args[1]
+    # parse args
+    module     = ctx.method_args[0]
+    input      = ctx.method_args[1]
+    weight     = module.weight if module.weight is not None else torch.ones(module.num_channels, dtype=torch.float32)
+    bias       = module.bias if module.bias is not None else torch.zeros(module.num_channels, dtype=torch.float32)
+    eps        = module.eps
     num_groups = module.num_groups
-    weight = module.weight
-    bias = module.bias
-    eps = module.eps
-    input_trt = add_missing_trt_tensors(ctx.network, [input])
-    output = ctx.method_return
-    plugin = get_group_norm_plugin(num_groups, weight, bias, eps)
+    output     = ctx.method_return
 
-    layer = ctx.network.add_plugin_v2(input_trt, plugin)
-    
+    # get tensorrt input 
+    inputs_trt = add_missing_trt_tensors(ctx.network, [input, weight, bias])
+    assert all([i!=-1 for i in inputs_trt[0].shape]), "GroupNorm does not support dynamic shape now"
+
+    # add tensorrt layer
+    creator = trt.get_plugin_registry().get_plugin_creator('GroupNormalizationPlugin', '1')
+    assert creator is not None, 'Has no GroupNormalizationPlugin version 1'
+    fc = trt.PluginFieldCollection()
+    fc.append(trt.PluginField(name='eps',        data=np.array([eps],        dtype=np.float32), type=trt.PluginFieldType.FLOAT32))
+    fc.append(trt.PluginField(name='num_groups', data=np.array([num_groups], dtype=np.int32  ), type=trt.PluginFieldType.INT32  ))
+
+    plugin = creator.create_plugin('group_num', fc)
+    layer  = ctx.network.add_plugin_v2(inputs_trt, plugin)
+
+    # get tensorrt output
     output._trt = layer.get_output(0)
 
 
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], has_group_norm_plugin())
-def test_group_norm_trt_g2_fp32():
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
+def test_group_norm_g2_1d():
     return torch.nn.GroupNorm(2, 10)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], has_group_norm_plugin())
-def test_group_norm_trt_g2_eps_fp32():
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
+def test_group_norm_g2_2d():
+    return torch.nn.GroupNorm(2, 10)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
+def test_group_norm_g2_eps_1d():
     return torch.nn.GroupNorm(2, 10, eps=1e-4)
 
-
-    
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
+def test_group_norm_g2_eps_2d():
+    return torch.nn.GroupNorm(2, 10, eps=1e-4)

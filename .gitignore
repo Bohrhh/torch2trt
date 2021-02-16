@@ -17,3 +17,4 @@ __pycache__/
 *.pth
 docs/converters.md
 torch2trt_test.md
+.DS_Store
