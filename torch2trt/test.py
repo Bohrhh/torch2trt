@@ -6,7 +6,7 @@ import traceback
 import numpy as np
 from termcolor import colored
 from torch2trt import torch2trt
-from torch2trt.tests.torchvision import classification
+# from torch2trt.tests.torchvision import classification
 from .utils import *
 
 
@@ -23,8 +23,8 @@ def run(self):
         inputs_conversion += (torch.zeros(shape).to(self.device).type(self.dtype), )
         
     # convert module
-    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 31,  **self.torch2trt_kwargs)
-
+    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 20,  keep_network=False, **self.torch2trt_kwargs)
+    
     # create inputs for torch/trt.. copy of inputs to handle inplace ops
     inputs = ()
     dynamic_shape = []
@@ -39,8 +39,9 @@ def run(self):
     inputs_trt = tuple([tensor.clone() for tensor in inputs])
 
     # test output against original
-    outputs = module(*inputs)
-    outputs_trt = module_trt(*inputs_trt)
+    with torch.no_grad():
+        outputs = module(*inputs)
+        outputs_trt = module_trt(*inputs_trt)
 
     if not isinstance(outputs, tuple):
         outputs = (outputs, )
@@ -62,8 +63,9 @@ def run(self):
     # benchmark pytorch throughput
     torch.cuda.current_stream().synchronize()
     t0 = time.time()
-    for i in range(50):
-        outputs = module(*inputs)
+    with torch.no_grad():
+        for i in range(50):
+            outputs = module(*inputs)
     torch.cuda.current_stream().synchronize()
     t1 = time.time()
     
@@ -82,9 +84,10 @@ def run(self):
     # benchmark pytorch latency
     torch.cuda.current_stream().synchronize()
     t0 = time.time()
-    for i in range(50):
-        outputs = module(*inputs)
-        torch.cuda.current_stream().synchronize()
+    with torch.no_grad():
+        for i in range(50):
+            outputs = module(*inputs)
+            torch.cuda.current_stream().synchronize()
     t1 = time.time()
     
     ms = 1000.0 * (t1 - t0) / 50.0
@@ -130,7 +133,6 @@ if __name__ == '__main__':
         try:
             if args.use_onnx:
                 test.torch2trt_kwargs.update({'use_onnx': True})
-                
             max_error, fps, fps_trt, ms, ms_trt = run(test)
 
             # write entry

@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 import tensorrt as trt
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 

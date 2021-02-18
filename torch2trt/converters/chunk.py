@@ -1,4 +1,3 @@
-from torch2trt.torch2trt import tensorrt_converter
 from .split import convert_split
 from torch2trt.utils import *
 

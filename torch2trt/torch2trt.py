@@ -1,4 +1,3 @@
-import copy
 import torch
 import importlib
 import tensorrt as trt
@@ -12,42 +11,7 @@ from .calibration import (
 )
 
 
-def tensorrt_converter(method, is_real=True, enabled=True, imports=[]):
-    
-    if isinstance(method, str):
-        module, module_name, qual_name = get_module_qualname(method)
-    else:
-        module, module_name, qual_name = importlib.import_module(method.__module__), method.__module__, method.__qualname__
-        
-    method_impl = eval('copy.deepcopy(module.%s)' % qual_name)
-    
-    def register_converter(converter):
-        CONVERTERS[method] = {
-            "converter": converter, 
-            "is_real": is_real, 
-            "module": module,
-            "module_name": module_name,
-            "qual_name": qual_name,
-            "method_str": module_name + '.' + qual_name,
-            "method_impl": method_impl
-        }
-        return converter
-
-    def pass_converter(converter):
-        return converter
-
-    if enabled:
-        return register_converter
-    else:
-        return pass_converter
-
-    return register_converter
-    
-
 # CONVERSION REGISTRY AND HOOKS
-
-CONVERTERS = {}
-
 
 class ConversionHook(object):
     """Attaches TensorRT converter to PyTorch method call"""
@@ -221,7 +185,6 @@ class TRTModule(torch.nn.Module):
         self.context.execute_async_v2(
             bindings, torch.cuda.current_stream().cuda_stream
         )
-        torch.cuda.synchronize()
 
         outputs = tuple(outputs)
         if len(outputs) == 1:
@@ -334,5 +297,4 @@ def torch2trt(module,
 
     if keep_network:
         module_trt.network = network
-
     return module_trt

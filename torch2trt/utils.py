@@ -1,10 +1,13 @@
+import copy
 import torch
 import importlib
 import tensorrt as trt
 
+# GLOBAL VARIABLE
+CONVERTERS = {}
+MODULE_TESTS = []
 
 # UTILITY FUNCTIONS
-
 
 def trt_version():
     return trt.__version__
@@ -329,9 +332,6 @@ class ModuleTest(object):
         return self.module_fn.__module__ + '.' + self.module_fn.__name__
 
 
-MODULE_TESTS = []
-
-
 def add_module_test(dtype, device, input_shapes, enabled=True, **torch2trt_kwargs):
     def register_module_test(module):
         global MODULE_TESTS
@@ -347,3 +347,35 @@ def add_module_test(dtype, device, input_shapes, enabled=True, **torch2trt_kwarg
         return pass_module_test
 
     return register_module_test
+
+
+def tensorrt_converter(method, is_real=True, enabled=True, imports=[]):
+    
+    if isinstance(method, str):
+        module, module_name, qual_name = get_module_qualname(method)
+    else:
+        module, module_name, qual_name = importlib.import_module(method.__module__), method.__module__, method.__qualname__
+        
+    method_impl = eval('copy.deepcopy(module.%s)' % qual_name)
+    
+    def register_converter(converter):
+        CONVERTERS[method] = {
+            "converter": converter, 
+            "is_real": is_real, 
+            "module": module,
+            "module_name": module_name,
+            "qual_name": qual_name,
+            "method_str": module_name + '.' + qual_name,
+            "method_impl": method_impl
+        }
+        return converter
+
+    def pass_converter(converter):
+        return converter
+
+    if enabled:
+        return register_converter
+    else:
+        return pass_converter
+
+    return register_converter

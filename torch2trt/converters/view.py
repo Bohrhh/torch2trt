@@ -1,5 +1,4 @@
 from functools import reduce
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 @tensorrt_converter('torch.Tensor.reshape')

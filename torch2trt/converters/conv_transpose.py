@@ -1,4 +1,3 @@
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 @tensorrt_converter('torch.nn.ConvTranspose1d.forward', enabled=trt_version() >= '7.1.3')

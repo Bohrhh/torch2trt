@@ -1,7 +1,6 @@
 import collections
 import torch.nn as nn  
 import torch.nn.functional as F    
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
                                                   
