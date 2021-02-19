@@ -79,6 +79,14 @@ def trt_num_outputs(engine):
     return count
 
 
+def default_input_names(num_inputs):
+    return ["input_%d" % i for i in range(num_inputs)]
+
+
+def default_output_names(num_outputs):
+    return ["output_%d" % i for i in range(num_outputs)]
+
+
 def convert_dim(dim, length):
     """Converts negative dim
     Args:

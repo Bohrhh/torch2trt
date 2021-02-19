@@ -1,5 +1,4 @@
 import torch
-import importlib
 import tensorrt as trt
 from collections import defaultdict
 from .utils import *
@@ -34,12 +33,6 @@ class ConversionHook(object):
 
     def __exit__(self, type, val, tb):
         self._set_method(self.converter['method_impl'])
-
-def default_input_names(num_inputs):
-    return ["input_%d" % i for i in range(num_inputs)]
-
-def default_output_names(num_outputs):
-    return ["output_%d" % i for i in range(num_outputs)]
 
 
 class LayerNamingNetworkWrapper(object):
@@ -158,7 +151,6 @@ class TRTModule(torch.nn.Module):
             self.context = self.engine.create_execution_context()
             self.context.active_optimization_profile = 0
             
-
         self.input_names = state_dict[prefix + "input_names"]
         self.output_names = state_dict[prefix + "output_names"]
 
@@ -196,6 +188,10 @@ class TRTModule(torch.nn.Module):
         if not self.context.profiler:
             self.context.profiler = trt.Profiler()
 
+    def export(self, filename='model.trt'):
+        with open(filename, 'wb') as f:
+            f.write(self.engine.serialize())
+
 
 def torch2trt(module, 
               inputs, 
@@ -231,7 +227,8 @@ def torch2trt(module,
         inputs = (inputs,)
 
     # run once to get num outputs
-    outputs = module(*inputs)
+    with torch.no_grad():
+        outputs = module(*inputs)
     if isinstance(outputs, list):
         outputs = tuple(outputs)
     if not isinstance(outputs, tuple):
@@ -243,11 +240,14 @@ def torch2trt(module,
         output_names = default_output_names(len(outputs))
 
     # ==================================================================
-    # tensorrt
+    # tensorrt objects
     logger  = trt.Logger(log_level)
     builder = trt.Builder(logger)
     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
     config  = builder.create_builder_config()
+
+    # ==================================================================
+    # set tensorrt configs
 
     # dynamic shape profile
     if len(dynamic_axes)>0:
@@ -262,22 +262,26 @@ def torch2trt(module,
             profile.set_shape(input_names[i], min_shape, opt_shape, max_shape) 
         config.add_optimization_profile(profile)
 
-    with ConversionContext(network) as ctx:
-
-        ctx.add_inputs(inputs, input_names, dynamic_axes=dynamic_axes)
-
-        outputs = module(*inputs)
-
-        if not isinstance(outputs, tuple) and not isinstance(outputs, list):
-            outputs = (outputs,)
-        ctx.mark_outputs(outputs, output_names)
-
     config.max_workspace_size = max_workspace_size
     if builder.platform_has_fast_fp16 and fp16_mode:
         config.set_flag(trt.BuilderFlag.FP16)
     builder.max_batch_size = max_batch_size
     builder.strict_type_constraints = strict_type_constraints
 
+    # ==================================================================
+    # construct tensorrt network
+    with ConversionContext(network) as ctx:
+
+        ctx.add_inputs(inputs, input_names, dynamic_axes=dynamic_axes)
+
+        outputs = module(*inputs)
+
+        if not isinstance(outputs, (list, tuple)):
+            outputs = (outputs,)
+        ctx.mark_outputs(outputs, output_names)
+
+    # ==================================================================
+    # int8 calibration
     if int8_mode:
 
         # default to use input tensors for calibration
@@ -291,10 +295,9 @@ def torch2trt(module,
             inputs, int8_calib_dataset, batch_size=int8_calib_batch_size, algorithm=int8_calib_algorithm
         )
 
+    # ==================================================================
+    # construct tensorrt model
     engine = builder.build_engine(network, config)
-
     module_trt = TRTModule(engine, input_names, output_names)
 
-    if keep_network:
-        module_trt.network = network
     return module_trt
