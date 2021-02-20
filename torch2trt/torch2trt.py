@@ -155,7 +155,6 @@ class TRTModule(torch.nn.Module):
         self.output_names = state_dict[prefix + "output_names"]
 
     def forward(self, *inputs):
-        batch_size = inputs[0].shape[0]
         bindings = [None] * (len(self.input_names) + len(self.output_names))
 
         for i, input_name in enumerate(self.input_names):
@@ -203,7 +202,6 @@ def torch2trt(module,
               fp16_mode=False, 
               max_workspace_size=1<<30, 
               strict_type_constraints=False, 
-              keep_network=True, 
               int8_mode=False, 
               int8_calib_dataset=None,
               int8_calib_algorithm=DEFAULT_CALIBRATION_ALGORITHM,

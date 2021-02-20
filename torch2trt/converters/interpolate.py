@@ -26,7 +26,7 @@ def convert_interpolate(ctx):
     shape = size
     if shape != None:
         if isinstance(shape, collections.Sequence):
-           shape  = list(input_trt.shape[:2]) + list(shape)
+            shape  = list(input_trt.shape[:2]) + list(shape)
         else:
             shape = list(input_trt.shape[:2]) + [shape] * input_dim
 
