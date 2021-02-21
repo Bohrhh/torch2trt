@@ -32,6 +32,5 @@ for method in TORCH_METHODS:
         
 
 @tensorrt_converter('torch.Tensor.dim', is_real=False)
-@tensorrt_converter('torch.Tensor.size', is_real=False)
 def dont_warn(ctx):
     pass

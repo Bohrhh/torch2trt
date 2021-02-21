@@ -39,6 +39,7 @@ from .permute import *
 from .pow import *
 from .prelu import *
 from .prod import *
+from .size import *
 from .softmax import *
 from .split import *
 from .stack import *

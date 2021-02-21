@@ -194,68 +194,6 @@ def broadcast_trt_tensors(network, trt_tensors, broadcast_ndim):
         broadcasted_trt_tensors[i] = trt_tensor
         
     return broadcasted_trt_tensors
-    
-    
-def trt_(network, *tensors):
-    """Creates missing TensorRT tensors and adds shuffle layers to make tensors broadcastable"""
-    trt_tensors = [None] * len(tensors)
-
-    dtype = check_torch_dtype(*tensors)
-
-    # get broadcast dimension
-    broadcast_num_dim = 0
-    for t in tensors:
-        if isinstance(t, torch.Tensor):
-            if not hasattr(t, "_trt"):
-                num_dim = len(t.shape)  # don't exclude batch for constants
-            else:
-                num_dim = len(
-                    t._trt.shape
-                )  # non-leaf tensors must already have _trt, get shape from that
-            if num_dim > broadcast_num_dim:
-                broadcast_num_dim = num_dim
-
-    for i, t in enumerate(tensors):
-        trt_tensor = None
-
-        # GET TRT TENSOR (OR CREATE TRT CONSTANT)
-
-        # get tensor w/ _trt
-        if isinstance(t, torch.Tensor) and hasattr(t, "_trt"):
-            trt_tensor = t._trt
-
-        # or... add constant for leaf tensor w/o _trt
-        elif isinstance(t, torch.Tensor) and not hasattr(t, "_trt"):
-            # add leaf tensor
-            shape = tuple(t.shape)  #  don't exclude batch when adding constants...?
-            weight = t.detach().cpu().numpy()
-            t._trt = network.add_constant(shape, weight).get_output(0)
-            trt_tensor = t._trt
-
-        # or... add constant for scalar primitive
-        elif isinstance(t, float) or isinstance(t, int):
-            shape = (1,) * broadcast_num_dim
-            scalar = t * torch.ones(shape, dtype=dtype).cpu().numpy()
-            trt_tensor = network.add_constant(shape, scalar).get_output(0)
-
-        assert trt_tensor is not None
-
-        # MAKE TRT TENSOR BROADCASTABLE IF IT IS NOT ALREADY
-
-        if len(trt_tensor.shape) < broadcast_num_dim:
-            # append 1 size dims to front
-            diff = broadcast_num_dim - len(trt_tensor.shape)
-            shape = tuple([1] * diff + list(trt_tensor.shape))
-            layer = network.add_shuffle(trt_tensor)
-            layer.reshape_dims = shape
-            trt_tensor = layer.get_output(0)
-
-        trt_tensors[i] = trt_tensor
-
-    if len(trt_tensors) == 1:
-        return trt_tensors[0]
-    else:
-        return tuple(trt_tensors)
 
 
 def get_arg(ctx, name, pos, default):
@@ -265,6 +203,57 @@ def get_arg(ctx, name, pos, default):
         return ctx.method_args[pos]
     else:
         return default
+
+
+
+def convert_shape_tensor(tensor):
+    if hasattr(tensor, 'is_shape_tensor'):
+        if tensor.is_shape_tensor and tensor.dim()==0:
+            return tensor.item()
+        elif tensor.is_shape_tensor and tensor.dim()>0:
+            return tuple(tensor.to('cpu').numpy())
+        else:
+            return tensor
+    else:
+        return tensor
+
+
+def convert_input(x):
+    if isinstance(x, torch.Tensor):
+        return convert_shape_tensor(x)
+    elif isinstance(x, list):
+        return [convert_input(i) for i in x]
+    elif isinstance(x, tuple):
+        return tuple([convert_input(i) for i in x])
+
+
+def extract_torch_inputs(args, kwargs):
+    torch_args = []
+    torch_kwargs = {}
+    for a in args:
+        torch_args.append(convert_input(a))
+    for k,v in kwargs.items():
+        torch_kwargs[k] = convert_input(v)
+    return torch_args, torch_kwargs
+
+
+def has_shape_tensor(inputs):
+    if isinstance(inputs, (tuple, list)):
+        for i in inputs:
+            if isinstance(i, torch.Tensor) and hasattr(i, 'is_shape_tensor') and i.is_shape_tensor:
+                return True
+            elif isinstance(i, (tuple, list, dict)):
+                return has_shape_tensor(i)
+            else:
+                return False
+    if isinstance(inputs, dict):
+        for k,v in inputs.items():
+            if isinstance(v, torch.Tensor) and hasattr(v, 'is_shape_tensor') and v.is_shape_tensor:
+                return True
+            elif isinstance(v, (tuple, list, dict)):
+                return has_shape_tensor(v)
+            else:
+                return False
 
 
 def attach_converter(ctx, method, converter, method_str):
@@ -281,7 +270,26 @@ def attach_converter(ctx, method, converter, method_str):
             skip = False
 
         # run original method
-        outputs = method(*args, **kwargs)
+        try:
+            outputs = method(*args, **kwargs)
+            print("===================")
+            print(method_str)
+            print(skip)
+            if has_shape_tensor(args) or has_shape_tensor(kwargs):
+                print("hhhhhhhhhhhhhh")
+                if isinstance(outputs, (tuple, list)):
+                    for o in outputs:
+                        o.is_shape_tensor = True
+                else:
+                    outputs.is_shape_tensor = True
+        except TypeError:
+            torch_args, torch_kwargs = extract_torch_inputs(args, kwargs)
+            outputs = method(*torch_args, **torch_kwargs)
+
+        # special for torch.Tensor.size method
+        if method_str=="torch.Tensor.size":
+            outputs = torch.tensor(outputs, device='cuda')
+            outputs.is_shape_tensor = True
 
         if not skip:
             ctx.method_args = args

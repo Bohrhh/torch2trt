@@ -92,6 +92,8 @@ class ConversionContext(object):
         if names is None:
             names = default_input_names(len(torch_inputs))
         self.input_names = names
+        print("==========input names============")
+        print(names)
 
         for i, torch_input in enumerate(torch_inputs):
             if not hasattr(torch_input, "_trt"):
@@ -110,7 +112,8 @@ class ConversionContext(object):
         if names is None:
             names = default_output_names(len(torch_outputs))
         self.output_names = names
-
+        print("==========output names============")
+        print(names)
         for i, torch_output in enumerate(torch_outputs):
             trt_tensor = torch_output._trt
             trt_tensor.name = names[i]
@@ -229,7 +232,7 @@ def torch2trt(module,
         outputs = module(*inputs)
     if isinstance(outputs, list):
         outputs = tuple(outputs)
-    if not isinstance(outputs, tuple):
+    if isinstance(outputs, torch.Size) or not isinstance(outputs, tuple):
         outputs = (outputs,)
         
     if input_names is None:
