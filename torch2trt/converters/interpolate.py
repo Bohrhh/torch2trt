@@ -17,50 +17,46 @@ def convert_interpolate(ctx):
     output        = ctx.method_return
 
     # get tensorrt input 
-    input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    assert all([i!=-1 for i in input_trt.shape]), "Interpolate does not support dynamic shape now"
+    input_trt   = add_missing_trt_tensors(ctx.network, [input])[0]
+    input_shape = ctx.network.add_shape(input=input_trt).get_output(0)
 
     # add tensorrt layer
     input_dim    = input.dim() - 2
 
     # size
-    size_trt = None
-    if isinstance(size, torch.Tensor):
-        size_trt = add_missing_trt_tensors(ctx.network, [size])[0]
-    elif isinstance(size, (tuple, list)):
-        print(type(size))
-        print(size)
-        size_trts  = add_missing_trt_tensors(ctx.network, size)
-        layer      = ctx.network.add_concatenation(inputs=size_trts)
-        layer.axis = 0
-        size_trt   = layer.get_output(0)
+    if size is not None:
+        size_trt = None
+        if isinstance(size, torch.Tensor):
+            size_trt = add_missing_trt_tensors(ctx.network, [size])[0]
+            if size.numel()==1:
+                size_trts  = [size_trt] * input_dim
+                layer      = ctx.network.add_concatenation(inputs=size_trts)
+                layer.axis = 0
+                size_trt   = layer.get_output(0)
+        else:
+            if not isinstance(size, collections.Sequence):
+                size = [size] * input_dim
+            size_trts  = add_missing_trt_tensors(ctx.network, size)
+            layer      = ctx.network.add_concatenation(inputs=size_trts)
+            layer.axis = 0
+            size_trt   = layer.get_output(0)
 
-
-    input_shape  = ctx.network.add_shape(input=input_trt).get_output(0)
-    input_NC     = ctx.network.add_slice(input=input_shape, start=[0], shape=[2], stride=[1]).get_output(0)
+        if size_trt is not None:
+            input_NC = ctx.network.add_slice(input=input_shape, start=[0], shape=[2], stride=[1]).get_output(0)
+            layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
+            layer.axis = 0
+            output_shape = layer.get_output(0)
     
-    if size_trt is not None:
-        layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
-        layer.axis = 0
-        output_shape = layer.get_output(0)
-
+    if scale_factor is not None:
+        if not isinstance(scale_factor, collections.Sequence):
+            scale_factor = [scale_factor] * input_dim
+        scale_factor = [1,1] + scale_factor
+        scale_factor = torch.tensor(scale_factor, device=input.device, dtype=torch.int32)
+        scale_factor_trt = add_missing_trt_tensors(ctx.network, [scale_factor])[0]
+        output_shape = ctx.network.add_elementwise(scale_factor_trt, input_shape, trt.ElementWiseOperation.PROD).get_output(0)
+    
     layer = ctx.network.add_resize(input=input_trt)
     layer.set_input(1, output_shape)
-
-
-    # # scale_factor
-    # size_trt = None
-    # if scale_factor is not None:
-    #     if not isinstance(scale_factor, collections.Sequence):
-    #         scale_factor = [scale_factor] * input_dim
-    #     scale_factor = torch.tensor(scale_factor, device=input.device)
-    #     scale_factor_trt = add_missing_trt_tensors(ctx.network, [scale_factor])[0]
-    #     size_trt = ctx.network.add_slice(input=input_shape, start=[2], shape=[input_dim], stride=[1]).get_output(0)
-    #     size_trt = ctx.network.add_elementwise(scale_factor_trt, size_trt, trt.ElementWiseOperation.PROD).get_output(0)
-    #     layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
-    #     layer.axis = 0
-    #     output_shape = layer.get_output(0)
-    #     layer_resize.set_input(1, output_shape)
 
     # other
     resize_mode = mode
@@ -78,10 +74,6 @@ def convert_interpolate(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1')
 def test_interpolate_nearest():
     return torch.nn.Upsample(scale_factor=2, mode="nearest")
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1')
-def test_interpolate_haha():
-    return torch.nn.Upsample(size=[22,24], mode="nearest")
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,5,13,13)], enabled=trt_version() >= '7.1')
 @add_module_test(torch.float32, torch.device('cuda'), [(1,4,12,12)], enabled=trt_version() >= '7.1')
@@ -124,3 +116,21 @@ def test_interpolate_size_3d():
 @add_module_test(torch.float32, torch.device('cuda'), [(1,4,3,5,1)], enabled=trt_version() >= '7.1')
 def test_interpolate_size_odd_input_3d():
     return torch.nn.Upsample(size=[11,14,17], mode="trilinear", align_corners=False)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1', dynamic_axes={0:[1,32], 2:[12,48], 3:[12,48]})
+def test_interpolate_nearest_dynamic():
+    return torch.nn.Upsample(scale_factor=[24,36], mode="nearest")
+
+
+
+class UpsampleTest(nn.Module):
+    def __init__(self):
+        super(UpsampleTest, self).__init__()
+
+    def forward(self, x):
+        H,W = x.size()[2:]
+        return H
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1', dynamic_axes={0:[1,32], 2:[12,48], 3:[12,48]})
+def test_interpolate_haha():
+    return UpsampleTest()

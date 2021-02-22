@@ -90,8 +90,6 @@ class LayerNamingNetworkWrapper(object):
                 ret = attr(*args, **kwargs)
                 if isinstance(ret, trt.ILayer):
                     self._set_layer_name(ret)
-                    print("===layer naming====")
-                    print(ret.name)
                 return ret
 
             return wrapper

@@ -172,16 +172,7 @@ def add_missing_trt_tensors(network, tensors):
             shape = (1,)
             scalar = torch.tensor([t])
             scalar = scalar.detach().cpu().numpy().astype(torch_dtype_to_numpy(scalar.dtype))
-            print("=============")
-            print(scalar)
-            print(scalar.dtype)
-            print(type(scalar))
-            print(scalar.shape)
-            layer = network.add_constant(shape, scalar)
-            print(layer.shape)
-            trt_tensor = layer.get_output(0)
-            print(trt_tensor.shape)
-
+            trt_tensor = network.add_constant(shape, scalar).get_output(0)
         elif hasattr(t, "_trt"):
             trt_tensor = t._trt
 
