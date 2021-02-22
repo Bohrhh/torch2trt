@@ -10,6 +10,36 @@ from .calibration import (
 )
 
 
+def add_inputs(network, torch_inputs, names=None, dynamic_axes={}):
+    if names is None:
+        names = default_input_names(len(torch_inputs))
+
+    for i, torch_input in enumerate(torch_inputs):
+        if not hasattr(torch_input, "_trt"):
+            trt_shape = list(torch_input.shape)
+            for d in dynamic_axes:
+                trt_shape[d] = -1
+            trt_tensor = network.add_input(
+                name=names[i],
+                shape=tuple(trt_shape),
+                dtype=torch_dtype_to_trt(torch_input.dtype),
+            )
+            trt_tensor.location = torch_device_to_trt(torch_input.device)
+            torch_input._trt = trt_tensor
+
+
+def mark_outputs(network, torch_outputs, names=None):
+    if names is None:
+        names = default_output_names(len(torch_outputs))
+
+    for i, torch_output in enumerate(torch_outputs):
+        trt_tensor = torch_output._trt
+        trt_tensor.name = names[i]
+        trt_tensor.location = torch_device_to_trt(torch_output.device)
+        trt_tensor.dtype = torch_dtype_to_trt(torch_output.dtype)
+        network.mark_output(trt_tensor)
+
+
 # CONVERSION REGISTRY AND HOOKS
 
 class ConversionHook(object):
@@ -60,6 +90,8 @@ class LayerNamingNetworkWrapper(object):
                 ret = attr(*args, **kwargs)
                 if isinstance(ret, trt.ILayer):
                     self._set_layer_name(ret)
+                    print("===layer naming====")
+                    print(ret.name)
                 return ret
 
             return wrapper
@@ -68,16 +100,20 @@ class LayerNamingNetworkWrapper(object):
 
 
 class ConversionContext(object):
-    def __init__(self, network, converters=CONVERTERS):
+    def __init__(self, network, converters=CONVERTERS, is_dynamic=True):
         self.network = LayerNamingNetworkWrapper(self, network)
         self.lock = False
         self.method_args = None
         self.method_kwargs = None
         self.method_return = None
-        self.hooks = [
-            ConversionHook(self, key, converter)
-            for key, converter in converters.items()
-        ]
+        self.is_dynamic = is_dynamic
+        self.dynamic_specific = ['torch.Tensor.size']
+        self.hooks = []
+        for k,c in converters.items():
+            if not is_dynamic and k in self.dynamic_specific:
+                c['is_real'] = False
+                c['converter'] = lambda x: None
+            self.hooks.append(ConversionHook(self, k, c))
 
     def __enter__(self):
         for hook in self.hooks:
@@ -87,39 +123,6 @@ class ConversionContext(object):
     def __exit__(self, type, val, tb):
         for hook in self.hooks:
             hook.__exit__(type, val, tb)
-
-    def add_inputs(self, torch_inputs, names=None, dynamic_axes={}):
-        if names is None:
-            names = default_input_names(len(torch_inputs))
-        self.input_names = names
-        print("==========input names============")
-        print(names)
-
-        for i, torch_input in enumerate(torch_inputs):
-            if not hasattr(torch_input, "_trt"):
-                trt_shape = list(torch_input.shape)
-                for d in dynamic_axes:
-                    trt_shape[d] = -1
-                trt_tensor = self.network.add_input(
-                    name=names[i],
-                    shape=tuple(trt_shape),
-                    dtype=torch_dtype_to_trt(torch_input.dtype),
-                )
-                trt_tensor.location = torch_device_to_trt(torch_input.device)
-                torch_input._trt = trt_tensor
-
-    def mark_outputs(self, torch_outputs, names=None):
-        if names is None:
-            names = default_output_names(len(torch_outputs))
-        self.output_names = names
-        print("==========output names============")
-        print(names)
-        for i, torch_output in enumerate(torch_outputs):
-            trt_tensor = torch_output._trt
-            trt_tensor.name = names[i]
-            trt_tensor.location = torch_device_to_trt(torch_output.device)
-            trt_tensor.dtype = torch_dtype_to_trt(torch_output.dtype)
-            self.network.mark_output(trt_tensor)
 
 
 class TRTModule(torch.nn.Module):
@@ -219,26 +222,21 @@ def torch2trt(module,
     # prepare input and output
     inputs_in = inputs
 
-    # copy inputs to avoid modifications to source data
-    inputs = [tensor.clone() for tensor in inputs]  # only run single entry
-
-    if isinstance(inputs, list):
-        inputs = tuple(inputs)
-    if not isinstance(inputs, tuple):
-        inputs = (inputs,)
+    inputs = to_tuple(inputs)
+    inputs = tuple([t.clone() for t in inputs])
 
     # run once to get num outputs
     with torch.no_grad():
         outputs = module(*inputs)
-    if isinstance(outputs, list):
-        outputs = tuple(outputs)
-    if isinstance(outputs, torch.Size) or not isinstance(outputs, tuple):
-        outputs = (outputs,)
+
+    outputs = to_tuple(outputs)
         
     if input_names is None:
         input_names = default_input_names(len(inputs))
     if output_names is None:
         output_names = default_output_names(len(outputs))
+    assert len(input_names)  == len(inputs),  "len(input_names) != len(inputs)"
+    assert len(output_names) == len(outputs), "len(output_names) != len(outputs)"
 
     # ==================================================================
     # tensorrt objects
@@ -271,15 +269,13 @@ def torch2trt(module,
 
     # ==================================================================
     # construct tensorrt network
-    with ConversionContext(network) as ctx:
+    add_inputs(network, inputs, input_names, dynamic_axes=dynamic_axes)
 
-        ctx.add_inputs(inputs, input_names, dynamic_axes=dynamic_axes)
-
+    with ConversionContext(network, is_dynamic=len(dynamic_axes)>0) as ctx:
         outputs = module(*inputs)
 
-        if not isinstance(outputs, (list, tuple)):
-            outputs = (outputs,)
-        ctx.mark_outputs(outputs, output_names)
+    outputs = to_tuple(outputs)
+    mark_outputs(network, outputs, output_names)
 
     # ==================================================================
     # int8 calibration

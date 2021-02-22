@@ -23,7 +23,7 @@ def run(self):
         inputs_conversion += (torch.zeros(shape).to(self.device).type(self.dtype), )
         
     # convert module
-    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 20, **self.torch2trt_kwargs)
+    module_trt = torch2trt(module, inputs_conversion, max_workspace_size=1 << 25, **self.torch2trt_kwargs)
     
     # create inputs for torch/trt.. copy of inputs to handle inplace ops
     inputs = ()
@@ -43,6 +43,9 @@ def run(self):
         outputs = module(*inputs)
         outputs_trt = module_trt(*inputs_trt)
 
+
+    if isinstance(outputs, torch.Size):
+        outputs = (torch.tensor(outputs, device=self.device), )
     if not isinstance(outputs, tuple):
         outputs = (outputs, )
     if not isinstance(outputs_trt, tuple):

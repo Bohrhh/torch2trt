@@ -1,6 +1,7 @@
 import copy
 import torch
 import importlib
+import numpy as np
 import tensorrt as trt
 
 # GLOBAL VARIABLE
@@ -45,6 +46,23 @@ def torch_dtype_from_trt(dtype):
         raise TypeError("%s is not supported by torch" % dtype)
 
 
+def torch_dtype_to_numpy(dtype):
+    if dtype == torch.bool:
+        return np.bool
+    elif dtype == torch.int8:
+        return np.int8
+    elif dtype == torch.int32:
+        return np.int32
+    elif dtype == torch.int64:
+        return np.int32
+    elif dtype == torch.float16:
+        return np.float16
+    elif dtype == torch.float32:
+        return np.float32
+    else:
+        raise TypeError("%s is not supported by numpy" % dtype)
+
+
 def torch_device_to_trt(device):
     if device.type == torch.device("cuda").type:
         return trt.TensorLocation.DEVICE
@@ -77,6 +95,14 @@ def trt_num_outputs(engine):
         if not engine.binding_is_input(i):
             count += 1
     return count
+
+
+def to_tuple(x):
+    if isinstance(x, list):
+        x = tuple(x)
+    if isinstance(x, torch.Size) or not isinstance(x, tuple):
+        x = (x, )
+    return x
 
 
 def default_input_names(num_inputs):
@@ -135,8 +161,6 @@ def add_missing_trt_tensors(network, tensors):
     """Creates missing TensorRT tensors as constants and attaches them to the Torch Tensors"""
     trt_tensors = [None] * len(tensors)
 
-    dtype = check_torch_dtype(*tensors)
-
     for i, t in enumerate(tensors):
         trt_tensor = None
 
@@ -144,10 +168,20 @@ def add_missing_trt_tensors(network, tensors):
 
         # get tensor w/ _trt
         # or... add constant for scalar primitive
-        if isinstance(t, float) or isinstance(t, int):
+        if isinstance(t, (float, int)):
             shape = (1,)
-            scalar = t * torch.ones(shape, dtype=dtype).cpu().numpy()
-            trt_tensor = network.add_constant(shape, scalar).get_output(0)
+            scalar = torch.tensor([t])
+            scalar = scalar.detach().cpu().numpy().astype(torch_dtype_to_numpy(scalar.dtype))
+            print("=============")
+            print(scalar)
+            print(scalar.dtype)
+            print(type(scalar))
+            print(scalar.shape)
+            layer = network.add_constant(shape, scalar)
+            print(layer.shape)
+            trt_tensor = layer.get_output(0)
+            print(trt_tensor.shape)
+
         elif hasattr(t, "_trt"):
             trt_tensor = t._trt
 
@@ -163,7 +197,7 @@ def add_missing_trt_tensors(network, tensors):
                     break
             shape = tuple(t.shape[num_preceding_ones:])
             
-            weight = t.detach().cpu().numpy()
+            weight = t.detach().cpu().numpy().astype(torch_dtype_to_numpy(t.dtype))
             t._trt = network.add_constant(shape, weight).get_output(0)
             trt_tensor = t._trt
 
@@ -203,7 +237,6 @@ def get_arg(ctx, name, pos, default):
         return ctx.method_args[pos]
     else:
         return default
-
 
 
 def convert_shape_tensor(tensor):
@@ -272,24 +305,24 @@ def attach_converter(ctx, method, converter, method_str):
         # run original method
         try:
             outputs = method(*args, **kwargs)
-            print("===================")
-            print(method_str)
-            print(skip)
-            if has_shape_tensor(args) or has_shape_tensor(kwargs):
-                print("hhhhhhhhhhhhhh")
-                if isinstance(outputs, (tuple, list)):
-                    for o in outputs:
-                        o.is_shape_tensor = True
-                else:
+
+            if not skip:
+                # special for torch.Tensor.size method
+                if method_str=="torch.Tensor.size":
+                    outputs = torch.tensor(outputs, device=args[0].device)
                     outputs.is_shape_tensor = True
+
+                if has_shape_tensor(args) or has_shape_tensor(kwargs):
+                    if isinstance(outputs, (tuple, list)):
+                        for o in outputs:
+                            o.is_shape_tensor = True
+                    else:
+                        outputs.is_shape_tensor = True
+
         except TypeError:
             torch_args, torch_kwargs = extract_torch_inputs(args, kwargs)
             outputs = method(*torch_args, **torch_kwargs)
 
-        # special for torch.Tensor.size method
-        if method_str=="torch.Tensor.size":
-            outputs = torch.tensor(outputs, device='cuda')
-            outputs.is_shape_tensor = True
 
         if not skip:
             ctx.method_args = args

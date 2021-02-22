@@ -17,6 +17,8 @@ def convert_size(ctx):
     output._trt = layer.get_output(0)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
+# dynamic_axes should be provided in this test example
+# or the input binding can not be found
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_size_basic():
     return TestInterface(lambda x: x.size())

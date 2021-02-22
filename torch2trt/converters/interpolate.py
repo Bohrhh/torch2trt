@@ -1,3 +1,4 @@
+import torch
 import collections
 import torch.nn as nn  
 import torch.nn.functional as F    
@@ -18,28 +19,50 @@ def convert_interpolate(ctx):
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
     assert all([i!=-1 for i in input_trt.shape]), "Interpolate does not support dynamic shape now"
-    
+
     # add tensorrt layer
-    input_dim = input.dim() - 2
+    input_dim    = input.dim() - 2
+
+    # size
+    size_trt = None
+    if isinstance(size, torch.Tensor):
+        size_trt = add_missing_trt_tensors(ctx.network, [size])[0]
+    elif isinstance(size, (tuple, list)):
+        print(type(size))
+        print(size)
+        size_trts  = add_missing_trt_tensors(ctx.network, size)
+        layer      = ctx.network.add_concatenation(inputs=size_trts)
+        layer.axis = 0
+        size_trt   = layer.get_output(0)
+
+
+    input_shape  = ctx.network.add_shape(input=input_trt).get_output(0)
+    input_NC     = ctx.network.add_slice(input=input_shape, start=[0], shape=[2], stride=[1]).get_output(0)
+    
+    if size_trt is not None:
+        layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
+        layer.axis = 0
+        output_shape = layer.get_output(0)
+
     layer = ctx.network.add_resize(input=input_trt)
+    layer.set_input(1, output_shape)
 
-    shape = size
-    if shape != None:
-        if isinstance(shape, collections.Sequence):
-            shape  = list(input_trt.shape[:2]) + list(shape)
-        else:
-            shape = list(input_trt.shape[:2]) + [shape] * input_dim
 
-        layer.shape = shape
+    # # scale_factor
+    # size_trt = None
+    # if scale_factor is not None:
+    #     if not isinstance(scale_factor, collections.Sequence):
+    #         scale_factor = [scale_factor] * input_dim
+    #     scale_factor = torch.tensor(scale_factor, device=input.device)
+    #     scale_factor_trt = add_missing_trt_tensors(ctx.network, [scale_factor])[0]
+    #     size_trt = ctx.network.add_slice(input=input_shape, start=[2], shape=[input_dim], stride=[1]).get_output(0)
+    #     size_trt = ctx.network.add_elementwise(scale_factor_trt, size_trt, trt.ElementWiseOperation.PROD).get_output(0)
+    #     layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
+    #     layer.axis = 0
+    #     output_shape = layer.get_output(0)
+    #     layer_resize.set_input(1, output_shape)
 
-    scales = scale_factor
-    if scales != None:
-        if not isinstance(scales, collections.Sequence):
-            scales = [scales] * input_dim
-        shape = list(input_trt.shape[:2]) + [input_trt.shape[i+2]*int(scales[i]) for i in range(input_dim)]
-        # layer.scales = [1] + list(scales)
-        layer.shape = shape
-
+    # other
     resize_mode = mode
     if resize_mode.lower() in ["linear","bilinear","trilinear"]:
         layer.resize_mode = trt.ResizeMode.LINEAR
@@ -55,6 +78,10 @@ def convert_interpolate(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1')
 def test_interpolate_nearest():
     return torch.nn.Upsample(scale_factor=2, mode="nearest")
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1')
+def test_interpolate_haha():
+    return torch.nn.Upsample(size=[22,24], mode="nearest")
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,5,13,13)], enabled=trt_version() >= '7.1')
 @add_module_test(torch.float32, torch.device('cuda'), [(1,4,12,12)], enabled=trt_version() >= '7.1')
