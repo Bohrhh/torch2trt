@@ -427,3 +427,44 @@ def tensorrt_converter(method, is_real=True, enabled=True, imports=[]):
         return pass_converter
 
     return register_converter
+
+
+def unsqueeze(ctx, input_trt, dim):
+    input_dim = len(input_trt.shape)
+    dim = convert_dim(dim, input_dim+1)
+    assert dim>=0 and dim<=input_dim, "dim out of range"
+    shape_trt = ctx.network.add_shape(input_trt).get_output(0)
+    dim_trt   = add_missing_trt_tensors(ctx.network, [1])[0]
+    if dim==0:
+        layer = ctx.network.add_concatenation(inputs=[dim_trt, shape_trt])
+    elif dim==input_dim:
+        layer = ctx.network.add_concatenation(inputs=[shape_trt, dim_trt])
+    else:
+        pre_trt  = ctx.network.add_slice(input=shape_trt, start=[0],   shape=[dim],           stride=[1]).get_output(0)
+        post_trt = ctx.network.add_slice(input=shape_trt, start=[dim], shape=[input_dim-dim], stride=[1]).get_output(0)
+        layer    = ctx.network.add_concatenation(inputs=[pre_trt, dim_trt, post_trt])
+    layer.axis = 0
+    new_shape_trt = layer.get_output(0)
+    layer = ctx.network.add_shuffle(input_trt)
+    layer.set_input(1, new_shape_trt)
+    return layer.get_output(0)
+
+
+def squeeze(ctx, input_trt, dim):
+    input_dim = len(input_trt.shape)
+    dim = convert_dim(dim, input_dim)
+    assert dim>=0 and dim<=input_dim-1, "dim out of range"
+    shape_trt = ctx.network.add_shape(input_trt).get_output(0)
+    if dim==0:
+        new_shape_trt = ctx.network.add_slice(input=shape_trt, start=[1], shape=[input_dim-1], stride=[1]).get_output(0)
+    elif dim==input_dim-1:
+        new_shape_trt = ctx.network.add_slice(input=shape_trt, start=[0], shape=[input_dim-1], stride=[1]).get_output(0)
+    else:
+        pre_trt  = ctx.network.add_slice(input=shape_trt, start=[0],     shape=[dim],             stride=[1]).get_output(0)
+        post_trt = ctx.network.add_slice(input=shape_trt, start=[dim+1], shape=[input_dim-dim-1], stride=[1]).get_output(0)
+        layer    = ctx.network.add_concatenation(inputs=[pre_trt, post_trt])
+        layer.axis = 0
+        new_shape_trt = layer.get_output(0)
+    layer = ctx.network.add_shuffle(input_trt)
+    layer.set_input(1, new_shape_trt)
+    return layer.get_output(0)

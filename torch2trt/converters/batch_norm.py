@@ -24,23 +24,19 @@ def convert_batch_norm(ctx):
 
     # if batch norm 1d, reshape to 2D
     if input_dim == 1:
-        assert sum([i==-1 for i in input_trt.shape])<=1, "BatchNorm1d only support one dynamic dim"
-        layer              = ctx.network.add_shuffle(input_trt)
-        layer.reshape_dims = tuple(input_trt.shape)+(1,)
-        input_trt          = layer.get_output(0)
-        scale              = scale[..., None]
-        power              = power[..., None]
+        input_trt = unsqueeze(ctx, input_trt, -1)
+        scale     = scale[..., None]
+        power     = power[..., None]
 
     layer = ctx.network.add_scale_nd(input_trt, trt.ScaleMode.CHANNEL, bias, scale, power, 1)
+    output_trt = layer.get_output(0)
 
     # reshape back to 1D
     if input_dim == 1:
-        output_trt = layer.get_output(0)
-        layer = ctx.network.add_shuffle(output_trt)
-        layer.reshape_dims = output_trt.shape[:-1]
+        output_trt = squeeze(ctx, output_trt, -1)
 
     # get tensorrt output
-    output._trt = layer.get_output(0)
+    output._trt = output_trt
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)], enabled=trt_version() >= '7.0')
@@ -55,7 +51,7 @@ def test_batch_norm_2d():
 def test_batch_norm_3d():
     return torch.nn.BatchNorm3d(10)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[3,30]})
 def test_batch_norm_1d_dynamic():
     return torch.nn.BatchNorm1d(10)
 

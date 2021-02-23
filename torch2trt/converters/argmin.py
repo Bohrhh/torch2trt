@@ -28,12 +28,8 @@ def convert_argmin(ctx):
     elif keepdim:
         output._trt = layer.get_output(1)
     else:
-        assert sum([i==-1 for i in input_trt.shape])<=1, \
-            "Argmin without keepdim only support one dynamic dim, please use keepdim for convenience"
-        layer = ctx.network.add_shuffle(layer.get_output(1))
-        shape = input_trt.shape[:dim] + input_trt.shape[dim+1:]
-        layer.reshape_dims = tuple(shape)
-        output._trt = layer.get_output(0)
+        output_trt  = layer.get_output(1)
+        output._trt = squeeze(ctx, output_trt, dim)
         
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
@@ -69,8 +65,8 @@ def test_argmin_tensor_reduce():
 def test_argmin_dim1_dynamic():
     return TestInterface(lambda x: torch.argmin(x, dim=1, keepdim=True))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)], dynamic_axes={0:[1,32]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={3:[5,50]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_argmin_dim2_dynamic():
     return TestInterface(lambda x: torch.argmin(x, dim=2, keepdim=False))
 

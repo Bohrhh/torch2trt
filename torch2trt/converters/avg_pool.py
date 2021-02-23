@@ -27,13 +27,10 @@ def convert_avg_pool(ctx):
 
     # if avg_pool1d, reshape to 2D
     if input_dim == 1:
-        assert sum([i==-1 for i in input_trt.shape])<=1, "Avg_pool1d only support one dynamic dim"
-        layer              = ctx.network.add_shuffle(input_trt)
-        layer.reshape_dims = tuple(input_trt.shape)+(1,)
-        input_trt          = layer.get_output(0)
-        kernel_size        = kernel_size + (1, )
-        stride             = stride + (1, )
-        padding            = padding + (0, )
+        input_trt   = unsqueeze(ctx, input_trt, -1)
+        kernel_size = kernel_size + (1, )
+        stride      = stride + (1, )
+        padding     = padding + (0, )
     
     layer = ctx.network.add_pooling_nd(
         input=input_trt, type=trt.PoolingType.AVERAGE, window_size=kernel_size)
@@ -45,14 +42,14 @@ def convert_avg_pool(ctx):
     if ceil_mode:
         layer.padding_mode = trt.PaddingMode.EXPLICIT_ROUND_UP
 
+    output_trt = layer.get_output(0)
+
     # reshape back to 1D
     if input_dim == 1:
-        output_trt = layer.get_output(0)
-        layer = ctx.network.add_shuffle(output_trt)
-        layer.reshape_dims = output_trt.shape[:-1]
+        output_trt = squeeze(ctx, output_trt, -1)
 
     # get tensorrt output
-    output._trt = layer.get_output(0)
+    output._trt = output_trt
  
 
 # =========================================
@@ -82,8 +79,7 @@ def test_avg_pool1d_k3s2p1():
 def test_avg_pool1d_k3s2p1_with_ceil_mode():
     return torch.nn.AvgPool1d(kernel_size=3, stride=2, padding=1, ceil_mode=True, count_include_pad=False)
 
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32]})
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5)], enabled=trt_version() >= '7.0', dynamic_axes={2:[5,50]})
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_avg_pool1d_k1s1p0_dynamic():
     return torch.nn.AvgPool1d(kernel_size=1, stride=1, padding=0, ceil_mode=False, count_include_pad=True)
 

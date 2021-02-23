@@ -271,7 +271,7 @@ def torch2trt(module,
 
     with ConversionContext(network, is_dynamic=len(dynamic_axes)>0) as ctx:
         outputs = module(*inputs)
-
+        
     outputs = to_tuple(outputs)
     mark_outputs(network, outputs, output_names)
 

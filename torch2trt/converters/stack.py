@@ -1,15 +1,8 @@
 from torch2trt.utils import *
 
 
-def unsqueeze(ctx, input, dim):
-    layer = ctx.network.add_shuffle(input)
-    shape = input.shape[:dim] + (1,) + input.shape[dim:]
-    layer.reshape_dims = tuple(shape)
-    return layer.get_output(0)
-
-
 @tensorrt_converter('torch.stack', enabled=trt_version() >= '7.0')
-def convert_cat(ctx):
+def convert_stack(ctx):
     # parse args
     inputs = get_arg(ctx, 'input', pos=0, default=None) 
     dim    = get_arg(ctx, 'dim',   pos=1, default=0   ) 

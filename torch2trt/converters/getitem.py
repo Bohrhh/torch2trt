@@ -52,7 +52,7 @@ def convert_tensor_getitem(ctx):
             new_slices.append(s)
             
     # fill missing slices at end
-    while num_slice_types(new_slices) < len(input.shape):
+    while num_slice_types(new_slices) < input.dim():
         new_slices.append(slice(None, None, None))
             
     slices = tuple(new_slices)
