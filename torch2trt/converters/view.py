@@ -1,6 +1,7 @@
 from functools import reduce
 from torch2trt.utils import *
 
+
 @tensorrt_converter('torch.Tensor.reshape')
 @tensorrt_converter('torch.Tensor.view')
 @tensorrt_converter('torch.Tensor.squeeze')
@@ -21,6 +22,7 @@ def convert_view(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
+
 
 @tensorrt_converter('torch.flatten')
 @tensorrt_converter('torch.Tensor.flatten')

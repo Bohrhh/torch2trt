@@ -100,7 +100,7 @@ def trt_num_outputs(engine):
 def to_tuple(x):
     if isinstance(x, list):
         x = tuple(x)
-    if isinstance(x, torch.Size) or not isinstance(x, tuple):
+    if not isinstance(x, tuple):
         x = (x, )
     return x
 
@@ -297,11 +297,19 @@ def attach_converter(ctx, method, converter, method_str):
         try:
             outputs = method(*args, **kwargs)
 
-            if not skip:
+            if not skip and ctx.lock:
                 # special for torch.Tensor.size method
                 if method_str=="torch.Tensor.size":
-                    outputs = torch.tensor(outputs, device=args[0].device)
-                    outputs.is_shape_tensor = True
+                    if isinstance(outputs, tuple):
+                        outputs_new = []
+                        for o in outputs:
+                            o = torch.tensor(o, device=args[0].device)
+                            o.is_shape_tensor = True
+                            outputs_new.append(o)
+                        outputs = tuple(outputs_new)
+                    else:
+                        outputs = torch.tensor(outputs, device=args[0].device)
+                        outputs.is_shape_tensor = True
 
                 if has_shape_tensor(args) or has_shape_tensor(kwargs):
                     if isinstance(outputs, (tuple, list)):

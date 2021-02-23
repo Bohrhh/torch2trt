@@ -43,19 +43,14 @@ def run(self):
         outputs = module(*inputs)
         outputs_trt = module_trt(*inputs_trt)
 
-
-    if isinstance(outputs, torch.Size):
-        outputs = (torch.tensor(outputs, device=self.device), )
-    if not isinstance(outputs, tuple):
-        outputs = (outputs, )
-    if not isinstance(outputs_trt, tuple):
-        outputs_trt = (outputs_trt, )
+    outputs = to_tuple(outputs)
+    outputs_trt = to_tuple(outputs_trt)
     
     # compute max error
     max_error = 0
-    for i in range(len(outputs)):
+    for i in range(len(outputs_trt)):
         max_error_i = 0
-        if outputs[i].dtype == torch.bool:
+        if outputs_trt[i].dtype == torch.bool:
             max_error_i = torch.sum(outputs[i] ^ outputs_trt[i])
         else:
             max_error_i = torch.max(torch.abs(outputs[i] - outputs_trt[i]))

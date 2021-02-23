@@ -19,7 +19,7 @@ def convert_conv(ctx):
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    assert input_trt.shape[1]!=-1, "Conv channel dimension should be constant"
+    assert input_trt.shape[1]!=-1, "Conv channel dimension should be constant, but has input dimension {} here".format(input_trt.shape)
     
     # add tensorrt layer
     input_dim = input.dim() - 2

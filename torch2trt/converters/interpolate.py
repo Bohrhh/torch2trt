@@ -25,27 +25,16 @@ def convert_interpolate(ctx):
 
     # size
     if size is not None:
-        size_trt = None
-        if isinstance(size, torch.Tensor):
-            size_trt = add_missing_trt_tensors(ctx.network, [size])[0]
-            if size.numel()==1:
-                size_trts  = [size_trt] * input_dim
-                layer      = ctx.network.add_concatenation(inputs=size_trts)
-                layer.axis = 0
-                size_trt   = layer.get_output(0)
-        else:
-            if not isinstance(size, collections.Sequence):
-                size = [size] * input_dim
-            size_trts  = add_missing_trt_tensors(ctx.network, size)
-            layer      = ctx.network.add_concatenation(inputs=size_trts)
-            layer.axis = 0
-            size_trt   = layer.get_output(0)
-
-        if size_trt is not None:
-            input_NC = ctx.network.add_slice(input=input_shape, start=[0], shape=[2], stride=[1]).get_output(0)
-            layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
-            layer.axis = 0
-            output_shape = layer.get_output(0)
+        if not isinstance(size, collections.Sequence):
+            size = [size] * input_dim
+        size_trts  = add_missing_trt_tensors(ctx.network, size)
+        layer      = ctx.network.add_concatenation(inputs=size_trts)
+        layer.axis = 0
+        size_trt   = layer.get_output(0)
+        input_NC = ctx.network.add_slice(input=input_shape, start=[0], shape=[2], stride=[1]).get_output(0)
+        layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
+        layer.axis = 0
+        output_shape = layer.get_output(0)
     
     if scale_factor is not None:
         if not isinstance(scale_factor, collections.Sequence):
@@ -119,18 +108,4 @@ def test_interpolate_size_odd_input_3d():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1', dynamic_axes={0:[1,32], 2:[12,48], 3:[12,48]})
 def test_interpolate_nearest_dynamic():
-    return torch.nn.Upsample(scale_factor=[24,36], mode="nearest")
-
-
-
-class UpsampleTest(nn.Module):
-    def __init__(self):
-        super(UpsampleTest, self).__init__()
-
-    def forward(self, x):
-        H,W = x.size()[2:]
-        return H
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)], enabled=trt_version() >= '7.1', dynamic_axes={0:[1,32], 2:[12,48], 3:[12,48]})
-def test_interpolate_haha():
-    return UpsampleTest()
+    return torch.nn.Upsample(size=[24,36], mode="nearest")
