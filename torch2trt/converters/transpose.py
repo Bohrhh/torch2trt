@@ -28,7 +28,7 @@ def convert_transpose(ctx):
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)])
 def test_torch_transpose_02():
-    return TestInterface(lambda x: x.transpose(1, 2))
+    return TestInterface(lambda x: torch.transpose(x, 0, 2))
 
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)])
@@ -39,3 +39,7 @@ def test_tensor_transpose_02():
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)])
 def test_tensor_transpose_12():
     return TestInterface(lambda x: x.transpose(1, 2))
+
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
+def test_tensor_transpose_23_dynamic():
+    return TestInterface(lambda x: x.transpose(2, 3))

@@ -4,10 +4,6 @@ from torch2trt.utils import *
 
 @tensorrt_converter('torch.Tensor.reshape')
 @tensorrt_converter('torch.Tensor.view')
-@tensorrt_converter('torch.Tensor.squeeze')
-@tensorrt_converter('torch.Tensor.unsqueeze')
-@tensorrt_converter('torch.squeeze')
-@tensorrt_converter('torch.unsqueeze')
 def convert_view(ctx):
     # parse args
     input  = ctx.method_args[0]
@@ -22,6 +18,47 @@ def convert_view(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
+
+
+@tensorrt_converter('torch.squeeze')
+@tensorrt_converter('torch.Tensor.squeeze')
+@tensorrt_converter('torch.Tensor.squeeze_')
+def convert_squeeze(ctx):
+    # parse args
+    input  = get_arg(ctx, 'input', pos=0, default=None)
+    dim    = get_arg(ctx, 'dim',   pos=1, default=None)
+    output = ctx.method_return
+
+    # get tensorrt input
+    input_trt  = add_missing_trt_tensors(ctx.network, [input])[0]
+
+    if dim is None:
+        reduce_dim = 0
+        for i, s in enumerate(input.shape):
+            if s==1:
+                input_trt = squeeze(ctx, input_trt, i-reduce_dim)
+                reduce_dim += 1
+    else:
+        input_trt = squeeze(ctx, input_trt, dim)
+
+    # get tensorrt output
+    output._trt = input_trt
+
+
+@tensorrt_converter('torch.unsqueeze')
+@tensorrt_converter('torch.Tensor.unsqueeze')
+@tensorrt_converter('torch.Tensor.unsqueeze_')
+def convert_squeeze(ctx):
+    # parse args
+    input  = get_arg(ctx, 'input', pos=0, default=None)
+    dim    = get_arg(ctx, 'dim',   pos=1, default=None)
+    output = ctx.method_return
+
+    # get tensorrt input
+    input_trt  = add_missing_trt_tensors(ctx.network, [input])[0]
+
+    # get tensorrt output
+    output._trt = unsqueeze(ctx, input_trt, dim)
 
 
 @tensorrt_converter('torch.flatten')

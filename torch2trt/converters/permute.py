@@ -58,3 +58,6 @@ def test_permute_list():
 def test_permute_tuple():
     return TestInterface(lambda x: x.permute((0,4,1,3,2)))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[4,40]})
+def test_permute_2d_0132_dynamic():
+    return TestInterface(lambda x: x.permute(0,1,3,2))

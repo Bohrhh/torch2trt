@@ -31,7 +31,7 @@ def convert_tensor_getitem(ctx):
 
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    assert all([i!=-1 for i in input_trt.shape]), "Getitem do not support dynamic shape"
+    assert not ctx.is_dynamic, "Getitem do not support dynamic shape"
 
     # add tensorrt layer
     # Step 1 - Replace ellipsis with expanded slices
@@ -68,7 +68,7 @@ def convert_tensor_getitem(ctx):
         if input_dim >= len(input_trt.shape):
             break
             
-        input_size = int(input_trt.shape[input_dim])
+        input_size = int(input.shape[input_dim])
         
         if isinstance(s, slice):
             start, size, stride = slice_to_trt(input_size, s)
@@ -98,6 +98,10 @@ def convert_tensor_getitem(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_tensor_getitem_1d_int():
     return TestInterface(lambda x: x[:, 0])
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
+def test_tensor_getitem_1slice():
+    return TestInterface(lambda x: x[0])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)])
 def test_tensor_getitem_2d_int():

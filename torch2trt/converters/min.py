@@ -48,15 +48,8 @@ def __convert_min_reduce(ctx):
         output_val._trt = layer.get_output(0)
         output_idx._trt = layer.get_output(1)
     else:
-        assert sum([i==-1 for i in input_trt.shape])<=1, \
-            "Min without keepdim only support one dynamic dim, please use keepdim for convenience"
-        layer_val = ctx.network.add_shuffle(layer.get_output(0))
-        layer_idx = ctx.network.add_shuffle(layer.get_output(1))
-        shape = input_trt.shape[:dim] + input_trt.shape[dim+1:]
-        layer_val.reshape_dims = tuple(shape)
-        layer_idx.reshape_dims = tuple(shape)
-        output_val._trt = layer_val.get_output(0)
-        output_idx._trt = layer_idx.get_output(0)
+        output_val._trt = squeeze(ctx, layer.get_output(0), dim)
+        output_idx._trt = squeeze(ctx, layer.get_output(1), dim)
 
 
 @tensorrt_converter('torch.min')
@@ -92,6 +85,11 @@ def test_min_reduce_all():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3), (1, 3, 3)]) # broadcast
 def test_min_elementwise():
     return TestInterface(lambda x, y: torch.min(x,y))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)], dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
+def test_min_d1_dynamic():
+    return TestInterface(lambda x: torch.min(x, 1, keepdim=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)], dynamic_axes={0:[1,32], 1:[3,30]})
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
