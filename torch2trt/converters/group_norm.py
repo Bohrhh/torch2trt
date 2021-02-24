@@ -31,20 +31,3 @@ def convert_group_norm_trt(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_1d():
-    return torch.nn.GroupNorm(2, 10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_2d():
-    return torch.nn.GroupNorm(2, 10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_eps_1d():
-    return torch.nn.GroupNorm(2, 10, eps=1e-4)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_eps_2d():
-    return torch.nn.GroupNorm(2, 10, eps=1e-4)

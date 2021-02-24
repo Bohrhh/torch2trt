@@ -34,19 +34,6 @@ def convert_relu(ctx):
     output._trt = layer.get_output(0)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
-def test_relu_basic():
-    return torch.nn.ReLU()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
-def test_functional_relu_basic():
-    return TestInterface(lambda x: torch.nn.functional.relu(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
-def test_relu_dynamic():
-    return torch.nn.ReLU()
-
-
 # ========================================================================
 # Relu6 activation: f(x) = x if 0 <= x <= 6, f(x) = 0 if x < 0, f(x) = 6 if x > 6
 @tensorrt_converter('torch.nn.functional.relu6')
@@ -56,7 +43,7 @@ def convert_functional_relu6(ctx):
     output = ctx.method_return
 
     # get tensorrt input
-    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input, 6])
+    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input, 6.0])
     input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], output.dim())
 
     layer = ctx.network.add_activation(input=input_a_trt, type=trt.ActivationType.RELU)
@@ -70,19 +57,6 @@ def convert_functional_relu6(ctx):
 def convert_relu6(ctx):
     ctx.method_args = ctx.method_args[1:]
     convert_functional_relu6(ctx)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
-def test_relu6_basic():
-    return torch.nn.ReLU6()
-    
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
-def test_functional_relu6_basic():
-    return TestInterface(lambda x: torch.nn.functional.relu6(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
-def test_relu6_dynamic():
-    return torch.nn.ReLU6()
 
 
 # ========================================================================
@@ -104,14 +78,6 @@ def convert_sigmoid(ctx):
     output._trt = layer.get_output(0)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
-def test_sigmoid_basic():
-    return torch.nn.Sigmoid()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
-def test_sigmoid_dynamic():
-    return torch.nn.Sigmoid()
-
 # ========================================================================
 # Tanh
 @tensorrt_converter('torch.nn.functional.tanh')
@@ -129,15 +95,6 @@ def convert_tanh(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)])
-def test_tanh_basic():
-    return torch.nn.Tanh()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
-def test_tanh_dynamic():
-    return torch.nn.Tanh()
 
 
 # ========================================================================
@@ -159,15 +116,6 @@ def convert_leaky_relu(ctx):
     
     # get tensorrt output
     output._trt = layer.get_output(0)
-    
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)])
-def test_leaky_relu():
-    return TestInterface(lambda x: torch.nn.functional.leaky_relu(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
-def test_leaky_relu_dynamic():
-    return TestInterface(lambda x: torch.nn.functional.leaky_relu(x))
 
 
 # ========================================================================
@@ -190,15 +138,6 @@ def convert_elu(ctx):
     # get tensorrt output
     output._trt = layer.get_output(0)
     
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)])
-def test_elu():
-    return TestInterface(lambda x: torch.nn.functional.elu(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
-def test_elu_dynamic():
-    return TestInterface(lambda x: torch.nn.functional.elu(x))
-
 
 # ========================================================================
 # Selu activation: f(x) = beta * x if x > 0, f(x) = beta * (alpha * exp(x) - alpha) if x <= 0
@@ -223,15 +162,6 @@ def convert_selu(ctx):
     output._trt = layer.get_output(0)
     
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)])
-def test_selu():
-    return TestInterface(lambda x: torch.nn.functional.selu(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
-def test_selu_dynamic():
-    return TestInterface(lambda x: torch.nn.functional.selu(x))
-
-
 # ========================================================================
 # Softsign activation: f(x) = x / (1 + abs(x))
 @tensorrt_converter('torch.nn.functional.softsign')
@@ -250,15 +180,6 @@ def convert_softsign(ctx):
     output._trt = layer.get_output(0)
     
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)])
-def test_softsign():
-    return TestInterface(lambda x: torch.nn.functional.softsign(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
-def test_softsign_dynamic():
-    return TestInterface(lambda x: torch.nn.functional.softsign(x))
-
-
 # ========================================================================
 # Softplus activation: f(x) = alpha * log(exp(beta * x) + 1)
 @tensorrt_converter('torch.nn.functional.softplus')
@@ -276,15 +197,6 @@ def convert_softplus(ctx):
     # get tensorrt output
     output._trt = layer.get_output(0)
     
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)])
-def test_softplus():
-    return TestInterface(lambda x: torch.nn.functional.softplus(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
-def test_softplus_dynamic():
-    return TestInterface(lambda x: torch.nn.functional.softplus(x))
-
 
 # ========================================================================
 # Hard sigmoid activation: f(x) = max(0, min(1, 1/6 * x + 0.5))
@@ -305,11 +217,3 @@ def convert_hardsigmoid(ctx):
     # get tensorrt output
     output._trt = layer.get_output(0)
     
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)])
-def test_hardsigmoid():
-    return TestInterface(lambda x: torch.nn.functional.hardsigmoid(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], dynamic_axes={0:[1,32], 2:[4,40]})
-def test_hardsigmoid_dynamic():
-    return TestInterface(lambda x: torch.nn.functional.hardsigmoid(x))

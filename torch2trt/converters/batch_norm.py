@@ -39,26 +39,3 @@ def convert_batch_norm(ctx):
     output._trt = output_trt
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)], enabled=trt_version() >= '7.0')
-def test_batch_norm_1d():
-    return torch.nn.BatchNorm1d(10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 4)], enabled=trt_version() >= '7.0')
-def test_batch_norm_2d():
-    return torch.nn.BatchNorm2d(10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 4, 5)], enabled=trt_version() >= '7.0')
-def test_batch_norm_3d():
-    return torch.nn.BatchNorm3d(10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[3,30]})
-def test_batch_norm_1d_dynamic():
-    return torch.nn.BatchNorm1d(10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 4)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[3,30], 3:[4,40]})
-def test_batch_norm_2d_dynamic():
-    return torch.nn.BatchNorm2d(10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 4, 5)], enabled=trt_version() >= '7.0', dynamic_axes={0:[1,32], 2:[3,30], 3:[4,40], 4:[5,50]})
-def test_batch_norm_3d_dynamic():
-    return torch.nn.BatchNorm3d(10)

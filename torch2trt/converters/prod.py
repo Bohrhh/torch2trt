@@ -20,29 +20,3 @@ def convert_prod(ctx):
     output._trt = layer.get_output(0)
 
         
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_prod_reduce_all():
-    return TestInterface(lambda x: torch.prod(x))     
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_prod_reduce_dim1():
-    return TestInterface(lambda x: torch.prod(x, 1))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_prod_reduce_dim2():
-    return TestInterface(lambda x: torch.prod(x, 2))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-def test_prod_reduce_dim1_keepdim():
-    return TestInterface(lambda x: torch.prod(x, 1, keepdim=True))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30]})
-def test_prod_reduce_all_dynamic():
-    return TestInterface(lambda x: torch.prod(x)) 
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30]})
-def test_prod_reduce_dim2_dynamic():
-    return TestInterface(lambda x: torch.prod(x, 2))

@@ -23,15 +23,3 @@ def convert_expand(ctx):
     # get tensorrt output
     output._trt = layer.get_output(0)
     
-    
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
-def test_tensor_expand_singledim():
-    return TestInterface(lambda x: x.expand(1,3,3,3))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,1,3)])
-def test_tensor_expand_multidim():
-    return TestInterface(lambda x: x.expand(1,3,3,3))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,1,3)])
-def test_tensor_expand_inferdim():
-    return TestInterface(lambda x: x.expand(1,3,-1,-1))

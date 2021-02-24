@@ -5,8 +5,10 @@ import argparse
 import traceback
 import numpy as np
 from termcolor import colored
+from torch2trt.utils import to_tuple
 from torch2trt import torch2trt
-# from torch2trt.tests.torchvision import classification
+from .operations import *
+from .models import *
 from .utils import *
 
 

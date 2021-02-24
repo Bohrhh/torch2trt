@@ -31,22 +31,3 @@ def convert_Linear(ctx):
     output_trt = squeeze(ctx, output_trt, -1)
 
     output._trt = output_trt
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)])
-def test_linear_basic():
-    return torch.nn.Linear(10, 5)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)])
-def test_linear_no_bias():
-    return torch.nn.Linear(10, 5, bias=False)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)], dynamic_axes={0:[1,32]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)], dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], dynamic_axes={0:[1,32], 1:[3,30], 2:[4,40]})
-def test_linear_dynamic():
-    return torch.nn.Linear(10, 5)

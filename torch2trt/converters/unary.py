@@ -25,23 +25,13 @@ def convert_exp(ctx):
     __convert_unary(ctx, trt.UnaryOperation.EXP)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_exp():
-    return TestInterface(lambda x: torch.exp(x))
-
-
-#  LOG : Log (base e)
+# LOG : Log (base e)
 @tensorrt_converter('torch.log')
 @tensorrt_converter('torch.log_')
 @tensorrt_converter('torch.Tensor.log')
 @tensorrt_converter('torch.Tensor.log_')
 def convert_log(ctx):
     __convert_unary(ctx, trt.UnaryOperation.LOG)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_log():
-    return TestInterface(lambda x: torch.log(x))
 
 
 # SQRT : Square root
@@ -53,11 +43,6 @@ def convert_sqrt(ctx):
     __convert_unary(ctx, trt.UnaryOperation.SQRT)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_sqrt():
-    return TestInterface(lambda x: torch.sqrt(x))
-
-
 # RECIP : Reciprocal
 @tensorrt_converter('torch.reciprocal')
 @tensorrt_converter('torch.reciprocal_')
@@ -65,11 +50,6 @@ def test_sqrt():
 @tensorrt_converter('torch.Tensor.reciprocal_')
 def convert_reciprocal(ctx):
     __convert_unary(ctx, trt.UnaryOperation.RECIP)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_reciprocal():
-    return TestInterface(lambda x: torch.reciprocal(x))
 
 
 # ABS : Absolute value
@@ -81,12 +61,7 @@ def convert_abs(ctx):
     __convert_unary(ctx, trt.UnaryOperation.ABS)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_abs():
-    return TestInterface(lambda x: torch.abs(x))
-
-
-#  NEG : Negation
+# NEG : Negation
 @tensorrt_converter('torch.neg')
 @tensorrt_converter('torch.neg_')
 @tensorrt_converter('torch.Tensor.neg')
@@ -96,23 +71,13 @@ def convert_neg(ctx):
     __convert_unary(ctx, trt.UnaryOperation.NEG)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_neg():
-    return TestInterface(lambda x: torch.neg(x))
-
-
-#  SIN : Sine
+# SIN : Sine
 @tensorrt_converter('torch.sin')
 @tensorrt_converter('torch.sin_')
 @tensorrt_converter('torch.Tensor.sin')
 @tensorrt_converter('torch.Tensor.sin_')
 def convert_sin(ctx):
     __convert_unary(ctx, trt.UnaryOperation.SIN)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_sin():
-    return TestInterface(lambda x: torch.sin(x))
 
 
 #  COS : Cosine
@@ -124,12 +89,7 @@ def convert_cos(ctx):
     __convert_unary(ctx, trt.UnaryOperation.COS)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_cos():
-    return TestInterface(lambda x: torch.cos(x))
-
-
-#  |    TAN : Tangent
+# TAN : Tangent
 @tensorrt_converter('torch.tan')
 @tensorrt_converter('torch.tan_')
 @tensorrt_converter('torch.Tensor.tan')
@@ -138,12 +98,7 @@ def convert_tan(ctx):
     __convert_unary(ctx, trt.UnaryOperation.TAN)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_tan():
-    return TestInterface(lambda x: torch.tan(x))
-
-
-#  |    SINH : Hyperbolic sine
+# SINH : Hyperbolic sine
 @tensorrt_converter('torch.sinh')
 @tensorrt_converter('torch.sinh_')
 @tensorrt_converter('torch.Tensor.sinh')
@@ -152,12 +107,7 @@ def convert_sinh(ctx):
     __convert_unary(ctx, trt.UnaryOperation.SINH)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_sinh():
-    return TestInterface(lambda x: torch.sinh(x))
-
-
-#  |    COSH : Hyperbolic cosine
+# COSH : Hyperbolic cosine
 @tensorrt_converter('torch.cosh')
 @tensorrt_converter('torch.cosh_')
 @tensorrt_converter('torch.Tensor.cosh')
@@ -166,12 +116,7 @@ def convert_cosh(ctx):
     __convert_unary(ctx, trt.UnaryOperation.COSH)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_cosh():
-    return TestInterface(lambda x: torch.cosh(x))
-
-
-#  |    ASIN : Inverse sine
+# ASIN : Inverse sine
 @tensorrt_converter('torch.asin')
 @tensorrt_converter('torch.asin_')
 @tensorrt_converter('torch.Tensor.asin')
@@ -180,12 +125,7 @@ def convert_asin(ctx):
     __convert_unary(ctx, trt.UnaryOperation.ASIN)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_asin():
-    return TestInterface(lambda x: torch.asin(x))
-
-
-#  |    ACOS : Inverse cosine
+# ACOS : Inverse cosine
 @tensorrt_converter('torch.acos')
 @tensorrt_converter('torch.acos_')
 @tensorrt_converter('torch.Tensor.acos')
@@ -194,12 +134,7 @@ def convert_acos(ctx):
     __convert_unary(ctx, trt.UnaryOperation.ACOS)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_acos():
-    return TestInterface(lambda x: torch.acos(x))
-
-
-#  |    ATAN : Inverse tangent
+# ATAN : Inverse tangent
 @tensorrt_converter('torch.atan')
 @tensorrt_converter('torch.atan_')
 @tensorrt_converter('torch.Tensor.atan')
@@ -208,19 +143,14 @@ def convert_atan(ctx):
     __convert_unary(ctx, trt.UnaryOperation.ATAN)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_atan():
-    return TestInterface(lambda x: torch.atan(x))
-
-
 #  |    ASINH : Inverse hyperbolic sine
 #  |  
 #  |    ACOSH : Inverse hyperbolic cosine
 #  |  
 #  |    ATANH : Inverse hyperbolic tangent
-#  |  
 
-#  CEIL : Ceiling
+
+# CEIL : Ceiling
 @tensorrt_converter('torch.ceil')
 @tensorrt_converter('torch.ceil_')
 @tensorrt_converter('torch.Tensor.ceil')
@@ -229,20 +159,10 @@ def convert_ceil(ctx):
     __convert_unary(ctx, trt.UnaryOperation.CEIL)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_ceil():
-    return TestInterface(lambda x: torch.ceil(x))
-
-
-#  FLOOR : Floor
+# FLOOR : Floor
 @tensorrt_converter('torch.floor')
 @tensorrt_converter('torch.floor_')
 @tensorrt_converter('torch.Tensor.floor')
 @tensorrt_converter('torch.Tensor.floor_')
 def convert_floor(ctx):
     __convert_unary(ctx, trt.UnaryOperation.FLOOR)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
-def test_floor():
-    return TestInterface(lambda x: torch.floor(x))

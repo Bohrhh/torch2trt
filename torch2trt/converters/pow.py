@@ -38,27 +38,3 @@ def convert_rpow(ctx):
     # get tensorrt output
     output._trt = layer.get_output(0)
     
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
-def test_pow_basic():
-    return TestInterface(lambda x, y: x**y)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
-def test_torch_pow():
-    return TestInterface(lambda x, y: torch.pow(x,y))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
-def test_rpow_int():
-    return TestInterface(lambda x: 2**x)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
-def test_rpow_float():
-    return TestInterface(lambda x: 2.0**x)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_pow_dynamic():
-    return TestInterface(lambda x, y: x**y)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_rpow_float_dynamic():
-    return TestInterface(lambda x: 2.0**x)

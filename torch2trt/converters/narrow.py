@@ -26,12 +26,3 @@ def convert_narrow(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,3,224,224)])
-def test_narrow1():
-    return TestInterface(lambda x: torch.narrow(x, 1, 0, 2))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,3,224,224)])
-def test_narrow2():
-    return TestInterface(lambda x: torch.narrow(x, 2, 2, 50))
