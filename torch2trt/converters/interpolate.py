@@ -27,7 +27,7 @@ def convert_interpolate(ctx):
     if size is not None:
         if not isinstance(size, collections.Sequence):
             size = [size] * input_dim
-        size_trts  = add_missing_trt_tensors(ctx.network, size)
+        size_trts  = add_missing_trt_tensors(ctx.network, size, dtype=torch.int32)
         layer      = ctx.network.add_concatenation(inputs=size_trts)
         layer.axis = 0
         size_trt   = layer.get_output(0)

@@ -11,9 +11,6 @@ def convert_normalize(ctx):
     eps    = get_arg(ctx, 'eps',   pos=3, default=1e-12)
     output = ctx.method_return
 
-    p = float(p)
-    eps = float(eps)
-
     # get tensorrt input
     input_trt, eps_trt, p_trt, p_inv_trt = add_missing_trt_tensors(ctx.network, [input, eps, p, 1.0 / p])
     input_trt, eps_trt, p_trt, p_inv_trt = broadcast_trt_tensors(ctx.network, [input_trt, eps_trt, p_trt, p_inv_trt], len(input_trt.shape))

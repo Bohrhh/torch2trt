@@ -111,6 +111,9 @@ class ConversionContext(object):
             if not is_dynamic and k in self.dynamic_specific:
                 c['is_real'] = False
                 c['converter'] = lambda x: None
+            else:
+                c['is_real'] = True
+                c['converter'] = c['converter_backup']
             self.hooks.append(ConversionHook(self, k, c))
 
     def __enter__(self):

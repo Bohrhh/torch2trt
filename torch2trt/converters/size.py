@@ -14,9 +14,9 @@ def convert_size(ctx):
     # add tensorrt layer
     shape_trt = ctx.network.add_shape(input=input_trt).get_output(0)
     if dim is not None:
-        indices_trt = add_missing_trt_tensors(ctx.network, [dim])[0]
+        indices_trt = add_missing_trt_tensors(ctx.network, [dim], dtype=torch.int32)[0]
         outputs._trt = ctx.network.add_gather(shape_trt, indices_trt, axis=0).get_output(0)
     else:
         for i in range(input.dim()):
-            indices_trt = add_missing_trt_tensors(ctx.network, [i])[0]
+            indices_trt = add_missing_trt_tensors(ctx.network, [i], dtype=torch.int32)[0]
             outputs[i]._trt = ctx.network.add_gather(shape_trt, indices_trt, axis=0).get_output(0)

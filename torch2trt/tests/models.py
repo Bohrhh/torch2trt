@@ -7,7 +7,7 @@ from .utils import add_module_test
 # classification
 
 @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)
-@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32]})
+@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def alexnet():
     return torchvision.models.alexnet(pretrained=False)
 
@@ -160,10 +160,11 @@ class ModelWrapper(torch.nn.Module):
         super(ModelWrapper, self).__init__()
         self.model = model
     def forward(self, x):
-        return self.model(x)['out']
+        logits = self.model(x)['out']
+        seg = torch.argmax(logits, dim=1, keepdim=True)
+        return seg
     
-
-@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)  
+@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)
 def deeplabv3_resnet50():
     bb = torchvision.models.segmentation.deeplabv3_resnet50(pretrained=False)
     model = ModelWrapper(bb)

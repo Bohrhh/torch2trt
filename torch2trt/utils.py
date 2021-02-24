@@ -156,9 +156,12 @@ def check_torch_dtype(*tensors):
     return dtype
 
     
-def add_missing_trt_tensors(network, tensors):
+def add_missing_trt_tensors(network, tensors, dtype=None):
     """Creates missing TensorRT tensors as constants and attaches them to the Torch Tensors"""
     trt_tensors = [None] * len(tensors)
+
+    if dtype is None:
+        dtype = check_torch_dtype(*tensors)
 
     for i, t in enumerate(tensors):
         trt_tensor = None
@@ -169,8 +172,8 @@ def add_missing_trt_tensors(network, tensors):
         # or... add constant for scalar primitive
         if isinstance(t, (float, int)):
             shape = (1,)
-            scalar = torch.tensor([t])
-            scalar = scalar.detach().cpu().numpy().astype(torch_dtype_to_numpy(scalar.dtype))
+            scalar = torch.tensor([t], dtype=dtype)
+            scalar = scalar.detach().cpu().numpy()
             trt_tensor = network.add_constant(shape, scalar).get_output(0)
         elif hasattr(t, "_trt"):
             trt_tensor = t._trt
@@ -187,7 +190,7 @@ def add_missing_trt_tensors(network, tensors):
                     break
             shape = tuple(t.shape[num_preceding_ones:])
             
-            weight = t.detach().cpu().numpy().astype(torch_dtype_to_numpy(t.dtype))
+            weight = t.detach().cpu().numpy()
             t._trt = network.add_constant(shape, weight).get_output(0)
             trt_tensor = t._trt
 
@@ -375,7 +378,8 @@ def tensorrt_converter(method, is_real=True, enabled=True, imports=[]):
             "module_name": module_name,
             "qual_name": qual_name,
             "method_str": module_name + '.' + qual_name,
-            "method_impl": method_impl
+            "method_impl": method_impl,
+            "converter_backup": converter
         }
         return converter
 
@@ -395,7 +399,7 @@ def unsqueeze(ctx, input_trt, dim):
     dim = convert_dim(dim, input_dim+1)
     assert dim>=0 and dim<=input_dim, "dim out of range"
     shape_trt = ctx.network.add_shape(input_trt).get_output(0)
-    dim_trt   = add_missing_trt_tensors(ctx.network, [1])[0]
+    dim_trt   = add_missing_trt_tensors(ctx.network, [1], dtype=torch.int32)[0]
     if dim==0:
         layer = ctx.network.add_concatenation(inputs=[dim_trt, shape_trt])
     elif dim==input_dim:

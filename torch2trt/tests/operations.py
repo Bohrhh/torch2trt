@@ -1014,67 +1014,67 @@ def test_dropout2d_dynamic():
 
 # STATIC
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)])
-def test_instance_norm_1d_static():
-    return torch.nn.InstanceNorm1d(10, track_running_stats=True)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
-def test_instance_norm_2d_static():
-    return torch.nn.InstanceNorm2d(10, track_running_stats=True)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
-def test_instance_norm_3d_static():
-    return torch.nn.InstanceNorm3d(10, track_running_stats=True)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)])
-def test_instance_norm_1d_static_affine():
-    return torch.nn.InstanceNorm1d(10, affine=True, track_running_stats=True)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
-def test_instance_norm_2d_static_affine():
-    return torch.nn.InstanceNorm2d(10, affine=True, track_running_stats=True)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
-def test_instance_norm_3d_static_affine():
-    return torch.nn.InstanceNorm3d(10, affine=True, track_running_stats=True)
-
-# DYNAMIC
-
-# @TODO(jwelsh): 1D dynamic test failing
 # @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)])
-# def test_instance_norm_1d_dynamic():
-#     return torch.nn.InstanceNorm1d(10, track_running_stats=False)
+# def test_instance_norm_1d_static():
+#     return torch.nn.InstanceNorm1d(10, track_running_stats=True)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
-def test_instance_norm_2d_dynamic():
-    return torch.nn.InstanceNorm2d(10, track_running_stats=False)
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
+# def test_instance_norm_2d_static():
+#     return torch.nn.InstanceNorm2d(10, track_running_stats=True)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
-def test_instance_norm_3d_dynamic():
-    return torch.nn.InstanceNorm3d(10, track_running_stats=False)
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
+# def test_instance_norm_3d_static():
+#     return torch.nn.InstanceNorm3d(10, track_running_stats=True)
 
 
-# @TODO(jwelsh): 1D dynamic test failing
 # @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)])
-# def test_instance_norm_1d_dynamic_affine():
-#     return torch.nn.InstanceNorm1d(10, affine=True, track_running_stats=False)
+# def test_instance_norm_1d_static_affine():
+#     return torch.nn.InstanceNorm1d(10, affine=True, track_running_stats=True)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
-def test_instance_norm_2d_dynamic_affine():
-    return torch.nn.InstanceNorm2d(10, affine=True, track_running_stats=False)
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
+# def test_instance_norm_2d_static_affine():
+#     return torch.nn.InstanceNorm2d(10, affine=True, track_running_stats=True)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
-def test_instance_norm_3d_dynamic_affine():
-    return torch.nn.InstanceNorm3d(10, affine=True, track_running_stats=False)
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
+# def test_instance_norm_3d_static_affine():
+#     return torch.nn.InstanceNorm3d(10, affine=True, track_running_stats=True)
+
+# # DYNAMIC
+
+# # @TODO(jwelsh): 1D dynamic test failing
+# # @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)])
+# # def test_instance_norm_1d_dynamic():
+# #     return torch.nn.InstanceNorm1d(10, track_running_stats=False)
+
+
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
+# def test_instance_norm_2d_dynamic():
+#     return torch.nn.InstanceNorm2d(10, track_running_stats=False)
+
+
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
+# def test_instance_norm_3d_dynamic():
+#     return torch.nn.InstanceNorm3d(10, track_running_stats=False)
+
+
+# # @TODO(jwelsh): 1D dynamic test failing
+# # @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3)])
+# # def test_instance_norm_1d_dynamic_affine():
+# #     return torch.nn.InstanceNorm1d(10, affine=True, track_running_stats=False)
+
+
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3)])
+# def test_instance_norm_2d_dynamic_affine():
+#     return torch.nn.InstanceNorm2d(10, affine=True, track_running_stats=False)
+
+
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 3, 3, 3)])
+# def test_instance_norm_3d_dynamic_affine():
+#     return torch.nn.InstanceNorm3d(10, affine=True, track_running_stats=False)
 
 
 # ========================================================================
