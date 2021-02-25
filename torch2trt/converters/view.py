@@ -48,7 +48,7 @@ def convert_squeeze(ctx):
 @tensorrt_converter('torch.unsqueeze')
 @tensorrt_converter('torch.Tensor.unsqueeze')
 @tensorrt_converter('torch.Tensor.unsqueeze_')
-def convert_squeeze(ctx):
+def convert_unsqueeze(ctx):
     # parse args
     input  = get_arg(ctx, 'input', pos=0, default=None)
     dim    = get_arg(ctx, 'dim',   pos=1, default=None)
