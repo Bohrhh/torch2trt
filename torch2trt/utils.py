@@ -45,23 +45,6 @@ def torch_dtype_from_trt(dtype):
         raise TypeError("%s is not supported by torch" % dtype)
 
 
-def torch_dtype_to_numpy(dtype):
-    if dtype == torch.bool:
-        return np.bool
-    elif dtype == torch.int8:
-        return np.int8
-    elif dtype == torch.int32:
-        return np.int32
-    elif dtype == torch.int64:
-        return np.int32
-    elif dtype == torch.float16:
-        return np.float16
-    elif dtype == torch.float32:
-        return np.float32
-    else:
-        raise TypeError("%s is not supported by numpy" % dtype)
-
-
 def torch_device_to_trt(device):
     if device.type == torch.device("cuda").type:
         return trt.TensorLocation.DEVICE
@@ -150,9 +133,6 @@ def check_torch_dtype(*tensors):
                 dtype = t.dtype
             else:
                 assert dtype == t.dtype  # , 'Tensor data types must match')
-    assert (
-        dtype is not None
-    )  # , 'Data type could not be inferred from any item in list')
     return dtype
 
     
@@ -160,8 +140,10 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
     """Creates missing TensorRT tensors as constants and attaches them to the Torch Tensors"""
     trt_tensors = [None] * len(tensors)
 
-    if dtype is None:
-        dtype = check_torch_dtype(*tensors)
+    tensor_dtype = check_torch_dtype(*tensors)
+    dtype = tensor_dtype if dtype is None else dtype
+    assert dtype is not None, "No implicit dtype"
+    assert (tensor_dtype is None) or (tensor_dtype==dtype), "Tensors data types must match"
 
     for i, t in enumerate(tensors):
         trt_tensor = None
@@ -180,18 +162,8 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
 
         # or... add constant for leaf tensor w/o _trt
         else:
-            
-            # remove all preceding ones, these can be re-inserted later when broadcasting
-            num_preceding_ones = 0
-            for j in range(len(t.shape)):
-                if int(t.shape[j]) == 1:
-                    num_preceding_ones += 1
-                else:
-                    break
-            shape = tuple(t.shape[num_preceding_ones:])
-            
             weight = t.detach().cpu().numpy()
-            t._trt = network.add_constant(shape, weight).get_output(0)
+            t._trt = network.add_constant(weight.shape, weight).get_output(0)
             trt_tensor = t._trt
 
 
@@ -211,9 +183,13 @@ def broadcast_trt_tensors(network, trt_tensors, broadcast_ndim):
         if len(t.shape) < broadcast_ndim:
             # append 1 size dims to front
             diff = broadcast_ndim - len(t.shape)
-            shape = tuple([1] * diff + list(t.shape))
+            shape = network.add_shape(t).get_output(0)
+            pre_ones = add_missing_trt_tensors(network, [torch.tensor([1]*diff, dtype=torch.int32)])[0]
+            layer = network.add_concatenation([pre_ones, shape])
+            layer.axis = 0
+            new_shape = layer.get_output(0)
             layer = network.add_shuffle(t)
-            layer.reshape_dims = shape
+            layer.set_input(1, new_shape)
             trt_tensor = layer.get_output(0)
         else:
             trt_tensor = t

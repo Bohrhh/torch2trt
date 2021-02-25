@@ -7,7 +7,7 @@ import numpy as np
 from termcolor import colored
 from torch2trt.utils import to_tuple
 from torch2trt import torch2trt
-# from .operations import *
+from .operations import *
 from .models import *
 from .utils import *
 
@@ -112,13 +112,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', '-o', help='Test output file path', type=str, default='torch2trt_test.md')
     parser.add_argument('--name', help='Regular expression to filter modules to test by name', type=str, default='.*')
+    parser.add_argument('--alphabet', help='Filter modules to test by alphabet', type=str, default='')
     parser.add_argument('--tolerance', help='Maximum error to print warning for entry', type=float, default='-1')
-    parser.add_argument('--include', help='Addition python file to include defining additional tests', action='append', default=[])
-    parser.add_argument('--use_onnx', help='Whether to test using ONNX or torch2trt tracing', action='store_true')
     args = parser.parse_args()
-    
-    for include in args.include:
-        runpy.run_module(include)
         
     num_tests, num_success, num_tolerance, num_error = 0, 0, 0, 0
     for test in MODULE_TESTS:
@@ -127,12 +123,12 @@ if __name__ == '__main__':
         name = test.module_name()
         if not re.search(args.name, name):
             continue
+        if args.alphabet!='' and args.alphabet.lower()!=test.alphabet:
+            continue
             
         num_tests += 1
         # run test
         try:
-            if args.use_onnx:
-                test.torch2trt_kwargs.update({'use_onnx': True})
             max_error, fps, fps_trt, ms, ms_trt = run(test)
 
             # write entry
