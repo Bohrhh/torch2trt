@@ -18,5 +18,3 @@ def convert_prod(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-        
