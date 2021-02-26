@@ -715,11 +715,8 @@ def test_ConvTranspose3d_k3s2p1d2_nobias():
 # div
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='d')
-def test_div_basic():
-    return TestInterface(lambda x, y: x / y)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],         alphabet='d', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
-def test_div_dynamic():
+def test_div_basic():
     return TestInterface(lambda x, y: x / y)
 
 class IDiv(torch.nn.Module):
@@ -731,11 +728,8 @@ class IDiv(torch.nn.Module):
         return x
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='d')
-def test_div_idiv():
-    return IDiv()
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],         alphabet='d', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
-def test_div_idiv_dynamic():
+def test_div_idiv():
     return IDiv()
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='d')
@@ -747,11 +741,8 @@ def test_rdiv_int():
     return TestInterface(lambda x: 1 / x)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='d')
-def test_rdiv_float():
-    return TestInterface(lambda x: 1.0 / x)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)],                       alphabet='d', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
-def test_rdiv_float_dynamic():
+def test_rdiv_float():
     return TestInterface(lambda x: 1.0 / x)
 
 class DivConstantNoBatch(torch.nn.Module):
@@ -867,11 +858,8 @@ def test_group_norm_g2_eps_2d():
 # identity
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i')
-def test_tensor_contiguous():
-    return TestInterface(lambda x: (x+1).contiguous())
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_tensor_contiguous_dynamic():
+def test_tensor_contiguous():
     return TestInterface(lambda x: (x+1).contiguous())
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3)],     alphabet='i')
@@ -880,16 +868,13 @@ def test_dropout():
     return TestInterface(lambda x: nn.functional.dropout((x+1),   training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i')
+@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
 def test_dropout2d():
     return TestInterface(lambda x: nn.functional.dropout2d((x+1), training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3,3)], alphabet='i')
 def test_dropout3d():
     return TestInterface(lambda x: nn.functional.dropout3d((x+1), training=False))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_dropout2d_dynamic():
-    return TestInterface(lambda x: nn.functional.dropout2d((x+1), training=False))
 
 
 # ========================================================================
@@ -982,8 +967,9 @@ def test_interpolate_size():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,3,13,13)],    enabled=trt_version() >= '7.1', alphabet='i')
 @add_module_test(torch.float32, torch.device('cuda'), [(1,3,1,1)],      enabled=trt_version() >= '7.1', alphabet='i')
+@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)],    enabled=trt_version() >= '7.1', alphabet='i', dynamic_axes={0:[1,32], 2:[12,48], 3:[12,48]})
 def test_interpolate_size_odd_input():
-    return torch.nn.Upsample(size=[6,3], mode="nearest")
+    return torch.nn.Upsample(size=[24,36], mode="nearest")
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,4,6,6,6)],    enabled=trt_version() >= '7.1', alphabet='i')
 def test_interpolate_nearest_3d():
@@ -1009,10 +995,6 @@ def test_interpolate_size_3d():
 def test_interpolate_size_odd_input_3d():
     return torch.nn.Upsample(size=[11,14,17], mode="trilinear", align_corners=False)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)],    enabled=trt_version() >= '7.1', alphabet='i', dynamic_axes={0:[1,32], 2:[12,48], 3:[12,48]})
-def test_interpolate_nearest_dynamic():
-    return torch.nn.Upsample(size=[24,36], mode="nearest")
-
 
 # ========================================================================
 # linear
@@ -1020,6 +1002,9 @@ def test_interpolate_nearest_dynamic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10)],       alphabet='l')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)],    alphabet='l')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], alphabet='l')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)],       alphabet='l', dynamic_axes={0:[1,32]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)],    alphabet='l', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], alphabet='l', dynamic_axes={0:[1,32], 1:[3,30], 2:[4,40]})
 def test_linear_basic():
     return torch.nn.Linear(10, 5)
 
@@ -1028,12 +1013,6 @@ def test_linear_basic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], alphabet='l')
 def test_linear_no_bias():
     return torch.nn.Linear(10, 5, bias=False)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)],       alphabet='l', dynamic_axes={0:[1,32]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)],    alphabet='l', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], alphabet='l', dynamic_axes={0:[1,32], 1:[3,30], 2:[4,40]})
-def test_linear_dynamic():
-    return torch.nn.Linear(10, 5)
 
 
 # ========================================================================
@@ -1047,6 +1026,7 @@ def test_linear_dynamic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10)],       alphabet='l')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)],    alphabet='l')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], alphabet='l')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)],       alphabet='l', dynamic_axes={0:[1,32], 1:[10,50]})
 def test_logsoftmax_d1():
     return nn.LogSoftmax(dim=1)
 
@@ -1063,15 +1043,8 @@ def test_torch_logsoftmax_d1():
     return TestInterface(lambda x: torch.log_softmax(x, dim=1))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)], alphabet='l')
-def test_logsoftmax_d2():
-    return nn.LogSoftmax(dim=2)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)],       alphabet='l', dynamic_axes={0:[1,32], 1:[10,50]})
-def test_logsoftmax_d1_dynamic():
-    return nn.LogSoftmax(dim=1)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)],    alphabet='l', dynamic_axes={0:[1,32], 1:[3,30], 2:[10,50]})
-def test_logsoftmax_d2_dynamic():
+def test_logsoftmax_d2():
     return nn.LogSoftmax(dim=2)
 
 
@@ -1080,6 +1053,8 @@ def test_logsoftmax_d2_dynamic():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_max_dim1():
     return TestInterface(lambda x: torch.max(x, 1))
 
@@ -1089,11 +1064,15 @@ def test_max_dim2():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_max_dim1_keepdim():
     return TestInterface(lambda x: torch.max(x, 1, keepdim=True))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_max_reduce_all():
     return TestInterface(lambda x: torch.max(x))
     
@@ -1103,21 +1082,6 @@ def test_max_reduce_all():
 def test_max_elementwise():
     return TestInterface(lambda x, y: torch.max(x,y))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_max_d1_dynamic():
-    return TestInterface(lambda x: torch.max(x, 1, keepdim=False))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_max_d1_keepdim_dynamic():
-    return TestInterface(lambda x: torch.max(x, 1, keepdim=True))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_max_reduce_all_dynamic():
-    return TestInterface(lambda x: torch.max(x))
-
 
 # ========================================================================
 # max_pool
@@ -1125,6 +1089,7 @@ def test_max_reduce_all_dynamic():
 
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', alphabet='m')
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5)], enabled=trt_version() >= '7.0', alphabet='m')
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_max_pool1d_k1s1p0():
     return torch.nn.MaxPool1d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
 
@@ -1148,10 +1113,6 @@ def test_max_pool1d_k3s2p1():
 def test_max_pool1d_k3s2p1_with_ceil_mode():
     return torch.nn.MaxPool1d(kernel_size=3, stride=2, padding=1, ceil_mode=True)
 
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[4,40]})
-def test_max_pool1d_k1s1p0_dynamic():
-    return torch.nn.MaxPool1d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
-
 
 # ========================================================================
 # max_pool
@@ -1159,6 +1120,8 @@ def test_max_pool1d_k1s1p0_dynamic():
 
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6)], enabled=trt_version() >= '7.0', alphabet='m')
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7)], enabled=trt_version() >= '7.0', alphabet='m')
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[4,40], 3:[6,60]})
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[5,50], 3:[7,70]})
 def test_max_pool2d_k1s1p0():
     return torch.nn.MaxPool2d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
 
@@ -1182,11 +1145,6 @@ def test_max_pool2d_k3s2p1():
 def test_max_pool2d_k3s2p1_with_ceil_mode():
     return torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True)
 
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[4,40], 3:[6,60]})
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[5,50], 3:[7,70]})
-def test_max_pool2d_k1s1p0_dynamic():
-    return torch.nn.MaxPool2d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
-
 
 # ========================================================================
 # max_pool
@@ -1194,6 +1152,8 @@ def test_max_pool2d_k1s1p0_dynamic():
 
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6, 8)], enabled=trt_version() >= '7.0', alphabet='m')
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7, 9)], enabled=trt_version() >= '7.0', alphabet='m')
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6, 8)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[4,40], 3:[6,60], 4:[8, 80]})
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7, 9)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[5,50], 3:[7,70], 4:[9, 90]})
 def test_max_pool3d_k1s1p0():
     return torch.nn.MaxPool3d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
 
@@ -1217,11 +1177,6 @@ def test_max_pool3d_k3s2p1():
 def test_max_pool3d_k3s2p1_with_ceil_mode():
     return torch.nn.MaxPool3d(kernel_size=3, stride=2, padding=1, ceil_mode=True)
 
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 4, 6, 8)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[4,40], 3:[6,60], 4:[8, 80]})
-@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 5, 7, 9)], enabled=trt_version() >= '7.0', alphabet='m', dynamic_axes={0:[1,32], 2:[5,50], 3:[7,70], 4:[9, 90]})
-def test_max_pool3d_k1s1p0_dynamic():
-    return torch.nn.MaxPool3d(kernel_size=1, stride=1, padding=0, ceil_mode=False)
-
 
 # ========================================================================
 # mean
@@ -1237,6 +1192,11 @@ def test_mean_torch_d1():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='m')
 def test_mean_tensor_d1():
     return TestInterface(lambda x: x.mean(dim=1, keepdim=False))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='m', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
+def test_mean_torch_d2():
+    return TestInterface(lambda x: torch.mean(x, dim=2, keepdim=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],       alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='m')
@@ -1260,9 +1220,7 @@ def test_mean_tensor_d1_d2():
 def test_mean_torch_keepdim():
     return TestInterface(lambda x: torch.mean(x, dim=1, keepdim=True))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='m', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_mean_torch_d2_dynamic():
-    return TestInterface(lambda x: torch.mean(x, dim=2, keepdim=False))
+
 
 
 # ========================================================================
@@ -1270,6 +1228,8 @@ def test_mean_torch_d2_dynamic():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_min_reduce_dim1():
     return TestInterface(lambda x: torch.min(x, 1))
 
@@ -1279,11 +1239,15 @@ def test_min_reduce_dim2():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_min_reduce_dim1_keepdim():
     return TestInterface(lambda x: torch.min(x, 1, keepdim=True))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_min_reduce_all():
     return TestInterface(lambda x: torch.min(x))
     
@@ -1293,31 +1257,13 @@ def test_min_reduce_all():
 def test_min_elementwise():
     return TestInterface(lambda x, y: torch.min(x,y))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_min_d1_dynamic():
-    return TestInterface(lambda x: torch.min(x, 1, keepdim=False))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_min_d1_keepdim_dynamic():
-    return TestInterface(lambda x: torch.min(x, 1, keepdim=True))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],                  alphabet='m', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],               alphabet='m', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_min_reduce_all_dynamic():
-    return TestInterface(lambda x: torch.min(x))
-
 
 # ========================================================================
 # mul
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m')
-def test_mul_basic():
-    return TestInterface(lambda x, y: x*y)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_mul_dynamic():
+def test_mul_basic():
     return TestInterface(lambda x, y: x*y)
 
 class IMul(torch.nn.Module):
@@ -1329,11 +1275,8 @@ class IMul(torch.nn.Module):
         return x
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m')
-def test_mul_imul():
-    return IMul()
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_mul_imul_dynamic():
+def test_mul_imul():
     return IMul()
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m')
@@ -1345,11 +1288,8 @@ def test_rmul_int():
     return TestInterface(lambda x: 10*x)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='m')
-def test_rmul_float():
-    return TestInterface(lambda x: 10.0*x)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='m', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_rmul_float_dynamic():
+def test_rmul_float():
     return TestInterface(lambda x: 10.0*x)
 
 class MulConstantNoBatch(torch.nn.Module):
@@ -1407,6 +1347,8 @@ def test_normalize_l1_basic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],       alphabet='n')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='n')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n', dynamic_axes={0:[1,32], 1:[3,30]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='n', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_normalize_l1p5_basic():
     return TestInterface(lambda x: nn.functional.normalize(x, p=1.5))
 
@@ -1415,21 +1357,13 @@ def test_normalize_l1p5_basic():
 def test_normalize_l2_height():
     return TestInterface(lambda x: nn.functional.normalize(x, p=2.0, dim=2))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n', dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='n', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_normalize_l2_dynamic():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=2.0))
-
 
 # ========================================================================
 # pad
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p')
-def test_pad_basic():
-    return TestInterface(lambda x: nn.functional.pad(x, (1, 2, 3, 4)))
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_pad_dynamic():
+def test_pad_basic():
     return TestInterface(lambda x: nn.functional.pad(x, (1, 2, 3, 4)))
 
 
@@ -1442,7 +1376,7 @@ def test_permute_2d_0123():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)],    alphabet='p')
 def test_permute_2d_0312():
-    return TestInterface(lambda x: x.permute(0,3,2,1))
+    return TestInterface(lambda x: x.permute(0,3,1,2))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)],    alphabet='p')
 def test_permute_2d_3012():
@@ -1464,6 +1398,7 @@ def test_permute_list():
 def test_permute_tuple():
     return TestInterface(lambda x: x.permute((0,4,1,3,2)))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)],    alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)],    alphabet='p', dynamic_axes={0:[1,32], 2:[4,40], 3:[4,40]})
 def test_permute_2d_0132_dynamic():
     return TestInterface(lambda x: x.permute(0,1,3,2))
@@ -1473,6 +1408,7 @@ def test_permute_2d_0132_dynamic():
 # pow
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='p')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='p', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def test_pow_basic():
     return TestInterface(lambda x, y: x**y)
 
@@ -1485,15 +1421,8 @@ def test_rpow_int():
     return TestInterface(lambda x: 2**x)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='p')
-def test_rpow_float():
-    return TestInterface(lambda x: 2.0**x)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='p', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_pow_dynamic():
-    return TestInterface(lambda x, y: x**y)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='p', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_rpow_float_dynamic():
+def test_rpow_float():
     return TestInterface(lambda x: 2.0**x)
 
 
@@ -1503,23 +1432,15 @@ def test_rpow_float_dynamic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5)],       alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)],    alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], alphabet='p')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
 def test_prelu_scalar():
     return torch.nn.PReLU()
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5)],       alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)],    alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], alphabet='p')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
 def test_prelu_vector():
-    m = torch.nn.PReLU(5)
-    m.weight = torch.nn.Parameter(torch.randn(5)) # randn so each channel different
-    return m
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_prelu_scalar_dynamic():
-    return torch.nn.PReLU()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_prelu_vector_dynamic():
     m = torch.nn.PReLU(5)
     m.weight = torch.nn.Parameter(torch.randn(5)) # randn so each channel different
     return m
@@ -1530,6 +1451,7 @@ def test_prelu_vector_dynamic():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],    alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='p')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30]})
 def test_prod_reduce_all():
     return TestInterface(lambda x: torch.prod(x))     
 
@@ -1539,6 +1461,7 @@ def test_prod_reduce_dim1():
     return TestInterface(lambda x: torch.prod(x, 1))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='p')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30]})
 def test_prod_reduce_dim2():
     return TestInterface(lambda x: torch.prod(x, 2))
 
@@ -1546,14 +1469,6 @@ def test_prod_reduce_dim2():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='p')
 def test_prod_reduce_dim1_keepdim():
     return TestInterface(lambda x: torch.prod(x, 1, keepdim=True))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30]})
-def test_prod_reduce_all_dynamic():
-    return TestInterface(lambda x: torch.prod(x)) 
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='p', dynamic_axes={0:[1,32], 2:[3,30]})
-def test_prod_reduce_dim2_dynamic():
-    return TestInterface(lambda x: torch.prod(x, 2))
 
 
 # ========================================================================
@@ -1579,6 +1494,7 @@ def test_softmax_dim0():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],       alphabet='s')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='s')
+@add_module_test(torch.float32, torch.device('cuda'), [(4, 3, 3, 3)], alphabet='s', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
 def test_softmax_dim1():
     return torch.nn.Softmax(1)
 
@@ -1594,10 +1510,6 @@ def test_softmax_dim_neg1():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='s')
 def test_softmax_dim_neg2():
     return torch.nn.Softmax(-2)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(4, 3, 3, 3)], alphabet='s', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_softmax_dim1_dynamic():
-    return torch.nn.Softmax(1)
 
 
 # ========================================================================
@@ -1649,11 +1561,8 @@ def test_stack_dim3():
 # sub
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s')
-def test_sub_basic():
-    return TestInterface(lambda x, y: x-y)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_sub_dynamic():
+def test_sub_basic():
     return TestInterface(lambda x, y: x-y)
 
 class ISub(torch.nn.Module):
@@ -1665,11 +1574,8 @@ class ISub(torch.nn.Module):
         return x
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s')
-def test_sub_isub():
-    return ISub()
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_sub_isub_dynamic():
+def test_sub_isub():
     return ISub()
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s')
@@ -1681,11 +1587,8 @@ def test_rsub_int():
     return TestInterface(lambda x: 1-x)
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='s')
-def test_rsub_float():
-    return TestInterface(lambda x: 1.0-x)
-
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='s', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_rsub_float_dynamic():
+def test_rsub_float():
     return TestInterface(lambda x: 1.0-x)
 
 class SubConstantNoBatch(torch.nn.Module):
@@ -1718,11 +1621,13 @@ def test_sub_constant_batch():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],    alphabet='s')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='s')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='s', dynamic_axes={0:[1,32], 2:[3,30]})
 def test_sum_reduce_all():
     return TestInterface(lambda x: torch.sum(x))     
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],    alphabet='s')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='s')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='s', dynamic_axes={0:[1,32], 2:[3,30]})
 def test_sum_dim1():
     return TestInterface(lambda x: torch.sum(x, 1))
 
@@ -1734,14 +1639,6 @@ def test_sum_dim2():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='s')
 def test_sum_dim1_keepdim():
     return TestInterface(lambda x: torch.sum(x, 1, keepdim=True))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='s', dynamic_axes={0:[1,32], 2:[3,30]})
-def test_sum_all_dynamic():
-    return TestInterface(lambda x: torch.sum(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], alphabet='s', dynamic_axes={0:[1,32], 2:[3,30]})
-def test_sum_dim1_dynamic():
-    return TestInterface(lambda x: torch.sum(x, 1))
 
 
 # ========================================================================
@@ -1762,8 +1659,9 @@ def test_tensor_transpose_02():
 def test_tensor_transpose_12():
     return TestInterface(lambda x: x.transpose(1, 2))
 
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)], alphabet='t')
 @add_module_test(torch.float32, torch.device("cuda"), [(1, 3, 3, 3)], alphabet='t', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_tensor_transpose_23_dynamic():
+def test_tensor_transpose_23():
     return TestInterface(lambda x: x.transpose(2, 3))
 
 
@@ -1950,6 +1848,20 @@ def test_view_2d():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3, 3, 6)], alphabet='v')
 def test_view_3d():
     return TestInterface(lambda x: x.view(1, 3, 3, -1))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],             alphabet='v')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],          alphabet='v')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)],       alphabet='v')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)],       alphabet='v', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30], 3:[3,30]})
+def test_tensor_reshape_1d():
+    return TestInterface(lambda x: x.reshape(1, -1))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],             alphabet='v')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],          alphabet='v')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)],       alphabet='v')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)],       alphabet='v', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30], 3:[3,30]})
+def test_torch_reshape_1d():
+    return TestInterface(lambda x: torch.reshape(x, (1,-1)))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 7)],             alphabet='v')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 5, 3)],       alphabet='v')

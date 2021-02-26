@@ -10,7 +10,7 @@ def convert_expand(ctx):
 
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    assert all([i!=-1 for i in input_trt.shape]), "Expand do not support dynamic shape"
+    assert not ctx.is_dynamic, "Expand do not support dynamic shape"
 
     # add tensorrt layer
     inshape  = tuple(input.shape) # exclude batch

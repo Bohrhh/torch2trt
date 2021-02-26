@@ -17,7 +17,8 @@ def convert_group_norm_trt(ctx):
 
     # get tensorrt input 
     inputs_trt = add_missing_trt_tensors(ctx.network, [input, weight, bias])
-    assert all([i!=-1 for i in inputs_trt[0].shape]), "GroupNorm does not support dynamic shape now"
+    assert not ctx.is_dynamic, "GroupNorm does not support dynamic shape now"
+    
 
     # add tensorrt layer
     creator = trt.get_plugin_registry().get_plugin_creator('GroupNormalizationPlugin', '1')

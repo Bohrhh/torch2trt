@@ -13,7 +13,7 @@ def convert_narrow(ctx):
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    assert all([i!=-1 for i in input_trt.shape]), "Narrow does not support dynamic shape"
+    assert not ctx.is_dynamic, "Narrow does not support dynamic shape"
 
     # add tensorrt layer
     shape   = list(input.shape)
