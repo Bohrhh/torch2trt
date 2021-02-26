@@ -1484,6 +1484,14 @@ def test_size_basic_dynamic():
 def test_size_dim2_dynamic():
     return TestInterface(lambda x: x.size(2))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], alphabet='s', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_shape_basic_dynamic():
+    return TestInterface(lambda x: x.shape)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], alphabet='s', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_shape_dim0_dynamic():
+    return TestInterface(lambda x: x.shape[0])
+
 
 # ========================================================================
 # softmax

@@ -106,6 +106,7 @@ class ConversionContext(object):
         self.method_return = None
         self.is_dynamic = is_dynamic
         self.dynamic_specific = ['torch.Tensor.size']
+        self.torch_shape = torch.Tensor.shape
         self.hooks = []
         for k,c in converters.items():
             if not is_dynamic and k in self.dynamic_specific:
@@ -115,15 +116,18 @@ class ConversionContext(object):
                 c['is_real'] = True
                 c['converter'] = c['converter_backup']
             self.hooks.append(ConversionHook(self, k, c))
-
+            
     def __enter__(self):
         for hook in self.hooks:
             hook.__enter__()
+        if self.is_dynamic:
+            torch.Tensor.shape = property(torch.Tensor.size)
         return self
 
     def __exit__(self, type, val, tb):
         for hook in self.hooks:
             hook.__exit__(type, val, tb)
+        torch.Tensor.shape = self.torch_shape
 
 
 class TRTModule(torch.nn.Module):

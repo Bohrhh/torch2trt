@@ -77,7 +77,7 @@ def vgg13_bn():
     return torchvision.models.vgg13_bn(pretrained=True)
 
 @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)
-# @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def mobilenet_v2():
     return torchvision.models.mobilenet_v2(pretrained=True)
 
@@ -115,24 +115,28 @@ class ModelWrapper(torch.nn.Module):
         return seg
     
 @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)
+@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def deeplabv3_resnet50():
     bb = torchvision.models.segmentation.deeplabv3_resnet50(pretrained=True)
     model = ModelWrapper(bb)
     return model
 
 @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)
+@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def deeplabv3_resnet101():
     bb = torchvision.models.segmentation.deeplabv3_resnet101(pretrained=True)
     model = ModelWrapper(bb)
     return model
 
 @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)
+@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def fcn_resnet50():
     bb = torchvision.models.segmentation.fcn_resnet50(pretrained=True)
     model = ModelWrapper(bb)
     return model
 
 @add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True)
+@add_module_test(torch.float16, torch.device('cuda'), [(1, 3, 224, 224)], fp16_mode=True, dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def fcn_resnet101():
     bb = torchvision.models.segmentation.fcn_resnet101(pretrained=True)
     model = ModelWrapper(bb)
