@@ -6,7 +6,7 @@ from torch2trt.utils import *
 def convert_mean(ctx):
     # parse args
     input   = get_arg(ctx, 'input',   pos=0, default=None )
-    dim     = get_arg(ctx, 'dim',     pos=1, default=tuple(range(len(input.shape))))
+    dim     = get_arg(ctx, 'dim',     pos=1, default=tuple(range(input.dim())))
     keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
     output  = ctx.method_return
     

@@ -263,10 +263,10 @@ def torch2trt(module,
         config.add_optimization_profile(profile)
 
     config.max_workspace_size = max_workspace_size
-    if builder.platform_has_fast_fp16 and fp16_mode:
+    if fp16_mode:
         config.set_flag(trt.BuilderFlag.FP16)
-    builder.max_batch_size = max_batch_size
-    builder.strict_type_constraints = strict_type_constraints
+    if strict_type_constraints:
+        config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
     # ==================================================================
     # construct tensorrt network

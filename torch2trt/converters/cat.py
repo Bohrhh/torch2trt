@@ -10,7 +10,7 @@ def convert_cat(ctx):
 
     # get tensorrt input
     trt_inputs = add_missing_trt_tensors(ctx.network, inputs)
-    trt_inputs = broadcast_trt_tensors(ctx.network, trt_inputs, len(output.shape))
+    trt_inputs = broadcast_trt_tensors(ctx.network, trt_inputs, output.dim())
 
     # add tensorrt layer
     layer = ctx.network.add_concatenation(inputs=trt_inputs)

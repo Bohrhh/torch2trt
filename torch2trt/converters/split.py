@@ -13,14 +13,14 @@ def convert_split(ctx):
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
     assert not ctx.is_dynamic, "Split do not support dynamic shape"
     
-    start  = [0] * input.dim() # exclude batch
+    start  = [0] * input.dim()
     stride = [1] * len(start)
     offset = 0
     dim    = convert_dim(dim, input.dim())
     
     # add slice layers
     for i, output in enumerate(outputs):
-        shape       = list(output.shape) # exclude batch dim
+        shape       = list(output.shape)
         start[dim]  = offset
         layer       = ctx.network.add_slice(input_trt, start=start, shape=shape, stride=stride)
         output._trt = layer.get_output(0)

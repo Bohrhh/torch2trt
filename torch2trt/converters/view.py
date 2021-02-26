@@ -41,9 +41,10 @@ def convert_squeeze(ctx):
     # get tensorrt input
     input_trt  = add_missing_trt_tensors(ctx.network, [input])[0]
 
+    input_shape = input.shape
     if dim is None:
         reduce_dim = 0
-        for i, s in enumerate(input.shape):
+        for i, s in enumerate(input_shape):
             if s==1:
                 input_trt = squeeze(ctx, input_trt, i-reduce_dim)
                 reduce_dim += 1
