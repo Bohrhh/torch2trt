@@ -8,10 +8,10 @@ from torch2trt.utils import *
 def convert_view(ctx):
     # parse args
     input  = ctx.method_args[0]
-    if isinstance(ctx.method_args[1], int):
-        shape = tuple(ctx.method_args[1:])  # handle permute(a, b, c, d)
+    if isinstance(ctx.method_args[1], (tuple, list)):
+        shape = tuple(ctx.method_args[1])   # handle view([a,b,c,d])
     else:
-        shape = tuple(ctx.method_args[1])   # handle permute([a, b, c, d])
+        shape = tuple(ctx.method_args[1:])  # handle view(a,b,c,d)
     output = ctx.method_return
 
     # get tensorrt input

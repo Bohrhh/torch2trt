@@ -1849,6 +1849,11 @@ def test_view_2d():
 def test_view_3d():
     return TestInterface(lambda x: x.view(1, 3, 3, -1))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)],       alphabet='v')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)],       alphabet='v', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30], 3:[3,30]})
+def test_view_size():
+    return TestInterface(lambda x: x.view(x.size(0), -1))
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],             alphabet='v')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],          alphabet='v')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)],       alphabet='v')

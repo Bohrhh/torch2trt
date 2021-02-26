@@ -143,7 +143,8 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
     tensor_dtype = check_torch_dtype(*tensors)
     dtype = tensor_dtype if dtype is None else dtype
     assert dtype is not None, "No implicit dtype"
-    assert (tensor_dtype is None) or (tensor_dtype==dtype), "Tensors data types must match"
+    assert (tensor_dtype is None) or (tensor_dtype==dtype), \
+        "Tensors data types must match, but now tensors dtype:{} and dtype:{}".format(tensor_dtype, dtype)
 
     for i, t in enumerate(tensors):
         trt_tensor = None
@@ -281,12 +282,12 @@ def attach_converter(ctx, method, converter, method_str):
                     if isinstance(outputs, tuple):
                         outputs_new = []
                         for o in outputs:
-                            o = torch.tensor(o, device=args[0].device)
+                            o = torch.tensor(o, device=args[0].device, dtype=torch.int32)
                             o.is_shape_tensor = True
                             outputs_new.append(o)
                         outputs = tuple(outputs_new)
                     else:
-                        outputs = torch.tensor(outputs, device=args[0].device)
+                        outputs = torch.tensor(outputs, device=args[0].device, dtype=torch.int32)
                         outputs.is_shape_tensor = True
 
                 if has_shape_tensor(args) or has_shape_tensor(kwargs):
