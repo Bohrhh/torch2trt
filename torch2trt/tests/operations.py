@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+import torch2trt.plugins as plugins
 from torch2trt.utils import trt_version
 from .utils import *
 
@@ -15,7 +17,7 @@ def test_relu_basic():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], alphabet='a')
 def test_functional_relu_basic():
-    return TestInterface(lambda x: torch.nn.functional.relu(x))
+    return TestInterface(lambda x: F.relu(x))
 
 
 # ========================================================================
@@ -29,7 +31,7 @@ def test_relu6_basic():
     
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)], alphabet='a')
 def test_functional_relu6_basic():
-    return TestInterface(lambda x: torch.nn.functional.relu6(x))
+    return TestInterface(lambda x: F.relu6(x))
 
 
 # ========================================================================
@@ -59,7 +61,7 @@ def test_tanh_basic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_leaky_relu():
-    return TestInterface(lambda x: torch.nn.functional.leaky_relu(x))
+    return TestInterface(lambda x: F.leaky_relu(x))
 
 
 # ========================================================================
@@ -69,7 +71,7 @@ def test_leaky_relu():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_elu():
-    return TestInterface(lambda x: torch.nn.functional.elu(x))
+    return TestInterface(lambda x: F.elu(x))
 
 
 # ========================================================================
@@ -79,7 +81,7 @@ def test_elu():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_selu():
-    return TestInterface(lambda x: torch.nn.functional.selu(x))
+    return TestInterface(lambda x: F.selu(x))
 
 
 # ========================================================================
@@ -89,7 +91,7 @@ def test_selu():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_softsign():
-    return TestInterface(lambda x: torch.nn.functional.softsign(x))
+    return TestInterface(lambda x: F.softsign(x))
 
 
 # ========================================================================
@@ -99,7 +101,7 @@ def test_softsign():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_softplus():
-    return TestInterface(lambda x: torch.nn.functional.softplus(x))
+    return TestInterface(lambda x: F.softplus(x))
 
 
 # ========================================================================
@@ -109,7 +111,7 @@ def test_softplus():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4)], alphabet='a', dynamic_axes={0:[1,32], 2:[4,40]})
 def test_hardsigmoid():
-    return TestInterface(lambda x: torch.nn.functional.hardsigmoid(x))
+    return TestInterface(lambda x: F.hardsigmoid(x))
 
 
 # ========================================================================
@@ -712,6 +714,31 @@ def test_ConvTranspose3d_k3s2p1d2_nobias():
 
 
 # ========================================================================
+# correlation
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 32, 64, 64), (1, 32, 64, 64)], alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 32, 64, 64), (1, 32, 64, 64)], alphabet='c', dynamic_axes={0:[1,32], 2:[64,128], 3:[64,128]})
+def test_correlation_time_mean():
+    return plugins.Correlation_TRT(max_disp=3, stride=1, mode='time', reduction='mean')
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 32, 64, 64), (1, 32, 64, 64)], alphabet='c')
+def test_correlation_l1_mean():
+    return plugins.Correlation_TRT(max_disp=3, stride=1, mode='l1', reduction='mean')
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 32, 64, 64), (1, 32, 64, 64)], alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 32, 64, 64), (1, 32, 64, 64)], alphabet='c', dynamic_axes={0:[1,32], 2:[64,128], 3:[64,128]})
+def test_correlation_l1_mean_s2():
+    return plugins.Correlation_TRT(max_disp=3, stride=2, mode='l1', reduction='mean')
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 32, 64, 64), (1, 32, 64, 64)], alphabet='c')
+def test_correlation_time_sum():
+    return plugins.Correlation_TRT(max_disp=5, stride=1, mode='time', reduction='sum')
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 32, 64, 64), (1, 32, 64, 64)], alphabet='c')
+def test_correlation_l1_sum():
+    return plugins.Correlation_TRT(max_disp=5, stride=1, mode='l1', reduction='sum')
+
+# ========================================================================
 # div
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='d')
@@ -835,6 +862,22 @@ def test_tensor_getitem_2d_weird_combo():
 
 
 # ========================================================================
+# grid_sample
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)],        alphabet='g')
+def test_grid_sample_2d():
+    return TestInterface(lambda x,y: F.grid_sample(x,y))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)],        alphabet='g')
+def test_grid_sample_2d_align_corners():
+    return TestInterface(lambda x,y: F.grid_sample(x, y, align_corners=True))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)],        alphabet='g')
+def test_grid_sample_2d_nearest():
+    return TestInterface(lambda x,y: F.grid_sample(x, y, mode='nearest'))
+
+
+# ========================================================================
 # group_norm
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)],      enabled=trt_version() >= '7.1.3', alphabet='g')
@@ -865,16 +908,16 @@ def test_tensor_contiguous():
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3)],     alphabet='i')
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i')
 def test_dropout():
-    return TestInterface(lambda x: nn.functional.dropout((x+1),   training=False))
+    return TestInterface(lambda x: F.dropout((x+1),   training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i')
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)],   alphabet='i', dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
 def test_dropout2d():
-    return TestInterface(lambda x: nn.functional.dropout2d((x+1), training=False))
+    return TestInterface(lambda x: F.dropout2d((x+1), training=False))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3,3)], alphabet='i')
 def test_dropout3d():
-    return TestInterface(lambda x: nn.functional.dropout3d((x+1), training=False))
+    return TestInterface(lambda x: F.dropout3d((x+1), training=False))
 
 
 # ========================================================================
@@ -1336,13 +1379,13 @@ def test_narrow2():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='n')
 def test_normalize_basic():
-    return TestInterface(lambda x: nn.functional.normalize(x))
+    return TestInterface(lambda x: F.normalize(x))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],       alphabet='n')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='n')
 def test_normalize_l1_basic():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=1.0))
+    return TestInterface(lambda x: F.normalize(x, p=1.0))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],       alphabet='n')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n')
@@ -1350,12 +1393,12 @@ def test_normalize_l1_basic():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n', dynamic_axes={0:[1,32], 1:[3,30]})
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='n', dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
 def test_normalize_l1p5_basic():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=1.5))
+    return TestInterface(lambda x: F.normalize(x, p=1.5))
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)],    alphabet='n')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], alphabet='n')
 def test_normalize_l2_height():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=2.0, dim=2))
+    return TestInterface(lambda x: F.normalize(x, p=2.0, dim=2))
 
 
 # ========================================================================
@@ -1364,7 +1407,12 @@ def test_normalize_l2_height():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def test_pad_basic():
-    return TestInterface(lambda x: nn.functional.pad(x, (1, 2, 3, 4)))
+    return TestInterface(lambda x: F.pad(x, (1, 2, 3, 4)))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_pad_last():
+    return TestInterface(lambda x: F.pad(x, (1, 2)))
 
 
 # ========================================================================

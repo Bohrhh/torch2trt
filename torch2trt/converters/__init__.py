@@ -18,13 +18,15 @@ from .clamp import *
 from .compare import *
 from .conv import *
 from .conv_transpose import *
+from .correlation import *
 from .div import *
 from .expand import *
 from .getitem import *
+from .grid_sample import *
+from .group_norm import *
 from .identity import *
 # from .instance_norm import *
 from .interpolate import *
-from .group_norm import *
 from .linear import *
 from .log_softmax import *
 from .max import *
@@ -32,8 +34,8 @@ from .max_pool import *
 from .mean import *
 from .min import *
 from .mul import *
-from .normalize import *
 from .narrow import *
+from .normalize import *
 from .pad import *
 from .permute import *
 from .pow import *

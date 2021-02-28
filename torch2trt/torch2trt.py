@@ -1,5 +1,6 @@
 import torch
 import tensorrt as trt
+from torch2trt import plugins
 from collections import defaultdict
 from .utils import *
 

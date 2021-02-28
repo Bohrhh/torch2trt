@@ -23,9 +23,10 @@ def convert_group_norm_trt(ctx):
     # add tensorrt layer
     creator = trt.get_plugin_registry().get_plugin_creator('GroupNormalizationPlugin', '1')
     assert creator is not None, 'Has no GroupNormalizationPlugin version 1'
-    fc = trt.PluginFieldCollection()
+    fc = []
     fc.append(trt.PluginField(name='eps',        data=np.array([eps],        dtype=np.float32), type=trt.PluginFieldType.FLOAT32))
     fc.append(trt.PluginField(name='num_groups', data=np.array([num_groups], dtype=np.int32  ), type=trt.PluginFieldType.INT32  ))
+    fc = trt.PluginFieldCollection(fc)
 
     plugin = creator.create_plugin('group_num', fc)
     layer  = ctx.network.add_plugin_v2(inputs_trt, plugin)

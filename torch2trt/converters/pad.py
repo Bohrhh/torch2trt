@@ -10,7 +10,11 @@ def convert_pad(ctx):
     mode   = get_arg(ctx, 'mode',  pos=2, default='constant')
     value  = get_arg(ctx, 'value', pos=3, default=0         )
     output = ctx.method_return
-    assert mode=='constant' and value==0, "mode / value are ignored since not supported by TensorRT"
+    assert input.dim()==4, 'At least 4 dimensions are required for input'
+    assert mode=='constant' and value==0, 'mode / value are ignored since not supported by TensorRT'
+    assert len(pad)<=4, 'Only 2D padding is currently supported.'
+    if len(pad)==2:
+        pad = pad+(0,0)
     
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
