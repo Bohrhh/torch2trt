@@ -84,8 +84,12 @@ IPluginV2DynamicExt* GridSamplePluginCreator::deserializePlugin(const char* name
 GridSample::GridSample(int mode, int padding_mode, bool align_corners)
     : mMode(mode), mPadding_mode(padding_mode), mAlign_corners(align_corners)
 {   
-    ASSERT(mMode <= 1 && mMode>=0);
-    ASSERT(mPadding_mode == 0);
+    printf("============================\n");
+    printf("%d\n", mode);
+    printf("%d\n", padding_mode);
+    printf("%d\n", int(align_corners));
+    ASSERT(mMode <= 1 && mMode >= 0);
+    ASSERT(mPadding_mode <= 2 && mPadding_mode >= 0);
 };
 
 
@@ -187,7 +191,8 @@ int GridSample::enqueue(const nvinfer1::PluginTensorDesc* inputDesc,
     cudaStream_t stream)
 {
     cudaError_t status;
-    if (inputDesc[0].dims.nbDims==4)
+    if (inputDesc[0].dims.nbDims==4){
+        printf("========== 2d ===========\n");
         status = grid_sampler_2d_cuda(
                     stream, 
                     inputs[0], 
@@ -202,7 +207,9 @@ int GridSample::enqueue(const nvinfer1::PluginTensorDesc* inputDesc,
                     inputDesc[0].dims.d[3],
                     inputDesc[1].dims.d[1], 
                     inputDesc[1].dims.d[2]);
-    else if (inputDesc[0].dims.nbDims==5)
+    }
+    else if (inputDesc[0].dims.nbDims==5){
+        printf("========== 3d ===========\n");
         status = grid_sampler_3d_cuda(
                     stream, 
                     inputs[0], 
@@ -219,6 +226,7 @@ int GridSample::enqueue(const nvinfer1::PluginTensorDesc* inputDesc,
                     inputDesc[1].dims.d[1], 
                     inputDesc[1].dims.d[2],
                     inputDesc[1].dims.d[3]);
+    }
     else
         ASSERT(false && "Input dimensions should be 4 or 5")
 

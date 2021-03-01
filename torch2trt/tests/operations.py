@@ -864,17 +864,26 @@ def test_tensor_getitem_2d_weird_combo():
 # ========================================================================
 # grid_sample
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)],        alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)], alphabet='g')
 def test_grid_sample_2d():
     return TestInterface(lambda x,y: F.grid_sample(x,y))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)],        alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)], alphabet='g', dynamic_axes={0:[1,32], 2:[32, 128]})
 def test_grid_sample_2d_align_corners():
     return TestInterface(lambda x,y: F.grid_sample(x, y, align_corners=True))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)],        alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)], alphabet='g')
 def test_grid_sample_2d_nearest():
     return TestInterface(lambda x,y: F.grid_sample(x, y, mode='nearest'))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112), (1, 32, 32, 2)], alphabet='g')
+def test_grid_sample_2d_border():
+    return TestInterface(lambda x,y: F.grid_sample(x, y, padding_mode='border'))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112, 112), (1, 32, 32, 32, 3)], alphabet='g')
+def test_grid_sample_3d():
+    return TestInterface(lambda x,y: F.grid_sample(x,y))
 
 
 # ========================================================================

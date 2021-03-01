@@ -28,6 +28,7 @@ using namespace nvinfer1::plugin;
 
 #include "correlationPlugin.h"
 #include "gridSamplePlugin.h"
+#include "groupNormalizationPlugin.h"
 
 using nvinfer1::plugin::RPROIParams;
 

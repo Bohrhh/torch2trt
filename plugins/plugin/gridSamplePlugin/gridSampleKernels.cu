@@ -225,6 +225,7 @@ __global__ void grid_sampler_3d_kernel(
     int out_sH = out_W;
     int out_sW = 1;
 
+
     int64_t _i_n_d_e_x = blockIdx.x * blockDim.x + threadIdx.x;
     for (int index=_i_n_d_e_x; _i_n_d_e_x < nthreads; _i_n_d_e_x+=blockDim.x * gridDim.x, index=_i_n_d_e_x) {
       const int w = index % out_W;
@@ -392,6 +393,17 @@ cudaError_t grid_sampler_3d_cuda(
     int grid_W) 
 {
     int count = batch * grid_D * grid_H * grid_W;
+    printf("============== NCDHW ==============\n");
+    printf("%d\n", batch);
+    printf("%d\n", C);
+    printf("%d\n", feat_D);
+    printf("%d\n", feat_H);
+    printf("%d\n", feat_W);
+
+    printf("============== DHW ==============\n");
+    printf("%d\n", grid_D);
+    printf("%d\n", grid_H);
+    printf("%d\n", grid_W);
 
     grid_sampler_3d_kernel<float>
         <<<(count + 1024 - 1) / 1024, 1024, 0, stream>>>(
