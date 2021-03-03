@@ -3,6 +3,7 @@ import tensorrt as trt
 from torch2trt import plugins
 from collections import defaultdict
 from .utils import *
+import time
 
 from .calibration import (
     TensorBatchDataset,

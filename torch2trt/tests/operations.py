@@ -1068,6 +1068,22 @@ def test_linear_no_bias():
 
 
 # ========================================================================
+# matmul
+
+@add_module_test(torch.float32, torch.device('cuda'), [(2, 10), (10, 4)],             alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10), (1, 10, 5)],       alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10), (1, 3, 10, 4)], alphabet='m')
+def test_torch_matmul():
+    return TestInterface(lambda x1,x2: torch.matmul(x1, x2))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(2, 10), (10, 4)],             alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10), (1, 10, 5)],       alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10), (1, 3, 10, 4)], alphabet='m')
+def test_tensor_matmul():
+    return TestInterface(lambda x1,x2: x1.matmul(x2))
+
+
+# ========================================================================
 # log_softmax
 
 # dim==0 has some unknow error
@@ -1098,6 +1114,7 @@ def test_torch_logsoftmax_d1():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)],    alphabet='l', dynamic_axes={0:[1,32], 1:[3,30], 2:[10,50]})
 def test_logsoftmax_d2():
     return nn.LogSoftmax(dim=2)
+
 
 
 # ========================================================================

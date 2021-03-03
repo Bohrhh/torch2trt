@@ -29,6 +29,7 @@ from .identity import *
 from .interpolate import *
 from .linear import *
 from .log_softmax import *
+from .matmul import *
 from .max import *
 from .max_pool import *
 from .mean import *
