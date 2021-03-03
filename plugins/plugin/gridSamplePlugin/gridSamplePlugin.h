@@ -5,8 +5,8 @@ Date: 20200828
 sample from feature according to keypoints
 
 Input: 
-    feature        -- [batch_size, C, H, W] or [batch_size, C, D, H, W]
-    keypoints      -- [batch_size, H_out, W_out, 2] or [batch_size, D_out, H_out, W_out, 3] range(-1,1)
+    feature        -- [batch_size, C, H, W]
+    keypoints      -- [batch_size, H_out, W_out, 2]
 
 Args:
     mode           -- 0 ('bilinear'), 1 ('nearest') 
@@ -14,7 +14,7 @@ Args:
     align_corner   -- False
 
 Output:
-    sampled_feature -- shape (batch_size, C, H_out, W_out) or (batch_size, C, D_out, H_out, W_out)
+    sampled_feature -- shape (batch_size, C, H_out, W_out)
 
 Reference: pytorch
  */

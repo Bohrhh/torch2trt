@@ -881,10 +881,6 @@ def test_grid_sample_2d_nearest():
 def test_grid_sample_2d_border():
     return TestInterface(lambda x,y: F.grid_sample(x, y, padding_mode='border'))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112, 112), (1, 32, 32, 32, 3)], alphabet='g')
-def test_grid_sample_3d():
-    return TestInterface(lambda x,y: F.grid_sample(x,y))
-
 
 # ========================================================================
 # group_norm
@@ -1070,12 +1066,16 @@ def test_linear_no_bias():
 # ========================================================================
 # matmul
 
+@add_module_test(torch.float32, torch.device('cuda'), [(10,),   (10, )],              alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(2, 10), (10, )],              alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(2, 10), (10, 4)],             alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10), (1, 10, 5)],       alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10), (1, 3, 10, 4)], alphabet='m')
 def test_torch_matmul():
     return TestInterface(lambda x1,x2: torch.matmul(x1, x2))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(10,),   (10, )],              alphabet='m')
+@add_module_test(torch.float32, torch.device('cuda'), [(2, 10), (10, )],              alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(2, 10), (10, 4)],             alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10), (1, 10, 5)],       alphabet='m')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10), (1, 3, 10, 4)], alphabet='m')

@@ -303,12 +303,12 @@ def attach_converter(ctx, method, converter, method_str):
 
 
         if not skip:
-            ctx.method_args = args
+            ctx.method_args   = args
             ctx.method_kwargs = kwargs
             ctx.method_return = outputs
-            ctx.method_str = method_str
+            ctx.method_str    = method_str
 
-            #             print('%s' % (converter.__name__,))
+            # print('%s' % (converter.__name__,))
             converter["converter"](ctx)
 
             # convert to None so conversion will fail for unsupported layers

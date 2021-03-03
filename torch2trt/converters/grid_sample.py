@@ -13,12 +13,11 @@ def convert_grid_sample(ctx):
     padding_mode  = get_arg(ctx, 'padding_mode',  pos=3, default='zeros')
     align_corners = get_arg(ctx, 'align_corners', pos=4, default=None)
     output        = ctx.method_return
+    assert input.dim()==4, "Only support tensors with 4 dimensions."
 
     mode = ['bilinear', 'nearest'].index(mode)
     padding_mode = ['zeros', 'border', 'reflection'].index(padding_mode)
     align_corners = 1 if align_corners else 0
-    print("=========================")
-    print("mode:{}, padding_mode:{}, align_corners:{}".format(mode, padding_mode, align_corners))
 
     # get tensorrt input 
     inputs_trt = add_missing_trt_tensors(ctx.network, [input, grid])

@@ -6,7 +6,6 @@ from .utils import *
 import time
 
 from .calibration import (
-    TensorBatchDataset,
     DatasetCalibrator,
     DEFAULT_CALIBRATION_ALGORITHM,
 )
@@ -211,7 +210,6 @@ def torch2trt(module,
               output_names=None, 
               dynamic_axes={},
               log_level=trt.Logger.ERROR, 
-              max_batch_size=32,
               fp16_mode=False, 
               max_workspace_size=1<<30, 
               strict_type_constraints=False, 
@@ -270,6 +268,7 @@ def torch2trt(module,
 
     config.max_workspace_size = max_workspace_size
     if fp16_mode:
+        print("======= float16 mode is on =======")
         config.set_flag(trt.BuilderFlag.FP16)
     if strict_type_constraints:
         config.set_flag(trt.BuilderFlag.STRICT_TYPES)
@@ -286,17 +285,11 @@ def torch2trt(module,
 
     # ==================================================================
     # int8 calibration
-    if int8_mode:
-
-        # default to use input tensors for calibration
-        if int8_calib_dataset is None:
-            int8_calib_dataset = TensorBatchDataset(inputs_in)
-
-        builder.int8_mode = True
-
-        # @TODO(jwelsh):  Should we set batch_size=max_batch_size?  Need to investigate memory consumption
-        builder.int8_calibrator = DatasetCalibrator(
-            inputs, int8_calib_dataset, batch_size=int8_calib_batch_size, algorithm=int8_calib_algorithm
+    if int8_mode and int8_calib_dataset is not None:
+        print("=======  int8 mode is on   =======")
+        config.set_flag(trt.BuilderFlag.INT8)
+        config.int8_calibrator = DatasetCalibrator(
+            int8_calib_dataset, algorithm=int8_calib_algorithm
         )
 
     # ==================================================================

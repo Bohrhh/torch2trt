@@ -14,7 +14,6 @@ def convert_matmul(ctx):
     input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], output.dim())
 
     # add tensorrt layer
-    # layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.PROD)
     op_a = trt.MatrixOperation.VECTOR if input_a.dim()==1 else trt.MatrixOperation.NONE
     op_b = trt.MatrixOperation.VECTOR if input_b.dim()==1 else trt.MatrixOperation.NONE
     layer = ctx.network.add_matrix_multiply(input_a_trt, op_a, input_b_trt, op_b)
