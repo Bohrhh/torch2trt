@@ -225,7 +225,6 @@ def torch2trt(module,
 
     # ==================================================================
     # prepare input and output
-    inputs_in = inputs
 
     inputs = to_tuple(inputs)
     inputs = tuple([t.clone() for t in inputs])
@@ -268,7 +267,7 @@ def torch2trt(module,
 
     config.max_workspace_size = max_workspace_size
     if fp16_mode:
-        print("======= float16 mode is on =======")
+        print("======= float16 mode is on")
         config.set_flag(trt.BuilderFlag.FP16)
     if strict_type_constraints:
         config.set_flag(trt.BuilderFlag.STRICT_TYPES)
@@ -285,12 +284,15 @@ def torch2trt(module,
 
     # ==================================================================
     # int8 calibration
-    if int8_mode and int8_calib_dataset is not None:
-        print("=======  int8 mode is on   =======")
-        config.set_flag(trt.BuilderFlag.INT8)
-        config.int8_calibrator = DatasetCalibrator(
-            int8_calib_dataset, algorithm=int8_calib_algorithm
-        )
+    if int8_mode:
+        if  int8_calib_dataset is not None:
+            print("======= int8 mode is on")
+            config.set_flag(trt.BuilderFlag.INT8)
+            config.int8_calibrator = DatasetCalibrator(
+                int8_calib_dataset, algorithm=int8_calib_algorithm
+            )
+        else:
+            print("======= int8 mode is off, since int8_calib_dataset is None")
 
     # ==================================================================
     # construct tensorrt model
