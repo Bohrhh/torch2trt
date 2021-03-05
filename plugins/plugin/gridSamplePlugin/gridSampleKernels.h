@@ -27,4 +27,21 @@ cudaError_t grid_sampler_2d_cuda(
     int grid_H, 
     int grid_W);
 
+cudaError_t grid_sampler_3d_cuda(
+    cudaStream_t stream, 
+    const void* input, 
+    const void* grid, 
+    void* output,
+    int interpolation_mode, 
+    int padding_mode,
+    bool align_corners,
+    int batch, 
+    int C,
+    int feat_D,
+    int feat_H,
+    int feat_W,
+    int grid_D,
+    int grid_H, 
+    int grid_W);
+
 #endif
