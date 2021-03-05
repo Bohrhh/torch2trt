@@ -20,3 +20,4 @@ torch2trt_test.md
 .DS_Store
 .vscode/
 .gitignore
+/examples/models

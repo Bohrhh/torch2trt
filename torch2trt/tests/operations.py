@@ -1043,6 +1043,10 @@ def test_interpolate_size_3d():
 def test_interpolate_size_odd_input_3d():
     return torch.nn.Upsample(size=[11,14,17], mode="trilinear", align_corners=False)
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)],    enabled=trt_version() >= '7.1', alphabet='i')
+def test_interpolate_haha():
+    return TestInterface(lambda x: 2 * F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True))
+
 
 # ========================================================================
 # linear

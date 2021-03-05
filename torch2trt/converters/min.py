@@ -20,9 +20,12 @@ def __convert_min_elementwise(ctx):
 
 def __convert_min_reduce(ctx):
     # parse args
-    input      = get_arg(ctx, 'input',   pos=0, default=None )
-    dim        = get_arg(ctx, 'dim',     pos=1, default=None )
-    keepdim    = get_arg(ctx, 'keepdim', pos=2, default=False)
+    input    = get_arg(ctx, 'input',    pos=0, default=None )
+    dim      = get_arg(ctx, 'dim',      pos=1, default=None )
+    keepdim  = get_arg(ctx, 'keepdim',  pos=2, default=False)
+    keepdims = get_arg(ctx, 'keepdims', pos=2, default=False)
+    keepdim  = keepdim or keepdims
+
     if dim is not None:
         output_val = ctx.method_return[0]
         output_idx = ctx.method_return[1]

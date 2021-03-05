@@ -31,8 +31,8 @@ def convert_interpolate(ctx):
         layer      = ctx.network.add_concatenation(inputs=size_trts)
         layer.axis = 0
         size_trt   = layer.get_output(0)
-        input_NC = ctx.network.add_slice(input=input_shape, start=[0], shape=[2], stride=[1]).get_output(0)
-        layer = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
+        input_NC   = ctx.network.add_slice(input=input_shape, start=[0], shape=[2], stride=[1]).get_output(0)
+        layer      = ctx.network.add_concatenation(inputs=[input_NC, size_trt])
         layer.axis = 0
         output_shape = layer.get_output(0)
     

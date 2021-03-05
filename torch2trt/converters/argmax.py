@@ -5,10 +5,12 @@ from torch2trt.utils import *
 @tensorrt_converter('torch.Tensor.argmax')
 def convert_argmax(ctx):
     # parse args
-    input   = ctx.method_args[0]
-    output  = ctx.method_return
-    dim     = get_arg(ctx, 'dim',     pos=1, default=None)
-    keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
+    input    = ctx.method_args[0]
+    dim      = get_arg(ctx, 'dim',      pos=1, default=None)
+    keepdim  = get_arg(ctx, 'keepdim',  pos=2, default=False)
+    keepdims = get_arg(ctx, 'keepdims', pos=2, default=False)
+    keepdim  = keepdim or keepdims
+    output   = ctx.method_return
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
