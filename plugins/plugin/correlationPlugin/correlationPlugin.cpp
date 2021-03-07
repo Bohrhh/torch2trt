@@ -203,21 +203,28 @@ int Correlation::enqueue(const nvinfer1::PluginTensorDesc* inputDesc,
     const nvinfer1::PluginTensorDesc* outputDesc, const void* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream)
 {
-    int32_t batch = inputDesc[0].dims.d[0];
-    int32_t channels = inputDesc[0].dims.d[1];
-    int32_t height = inputDesc[0].dims.d[2];
-    int32_t width = inputDesc[0].dims.d[3];
+    int batch    = inputDesc[0].dims.d[0];
+    int channels = inputDesc[0].dims.d[1];
+    int height   = inputDesc[0].dims.d[2];
+    int width    = inputDesc[0].dims.d[3];
     if (inputDesc[0].type == nvinfer1::DataType::kFLOAT){
-        const float* left = static_cast<const float*>(inputs[0]);
-        const float* right = static_cast<const float*>(inputs[1]);
-        float* corr = static_cast<float*>(outputs[0]);
-        correlation(stream, left, right, corr, batch, mMaxDisparity, mStride, channels, height, width, mIsTime, mIsMean);
+        CUDACHECK(correlation(stream, 
+                              static_cast<const float*>(inputs[0]),
+                              static_cast<const float*>(inputs[1]),
+                              static_cast<float*>(outputs[0]),
+                              batch, 
+                              mMaxDisparity, 
+                              mStride, 
+                              channels, 
+                              height, 
+                              width, 
+                              mIsTime, 
+                              mIsMean));
     }
     else{
-        ASSERT(false && "now only suport float type!");
+        ASSERT(false && "Correlation only suport float type inputs!");
     }
-    return cudaGetLastError() != cudaSuccess;
-
+    return 0;
 };
 
 // Return the DataType of the plugin output at the requested index

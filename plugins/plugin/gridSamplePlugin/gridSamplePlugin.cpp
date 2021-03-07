@@ -190,9 +190,9 @@ int GridSample::enqueue(const nvinfer1::PluginTensorDesc* inputDesc,
 {
     if (inputDesc[0].dims.nbDims==4){
         cudaError_t status = grid_sampler_2d_cuda(stream,
-                                    inputs[0], 
-                                    inputs[1], 
-                                    outputs[0],
+                                    static_cast<const float*>(inputs[0]), 
+                                    static_cast<const float*>(inputs[1]), 
+                                    static_cast<float*>(outputs[0]),
                                     mMode,
                                     mPadding_mode,
                                     mAlign_corners,
@@ -202,13 +202,13 @@ int GridSample::enqueue(const nvinfer1::PluginTensorDesc* inputDesc,
                                     inputDesc[0].dims.d[3],
                                     inputDesc[1].dims.d[1], 
                                     inputDesc[1].dims.d[2]);  
-        ASSERT(status == cudaSuccess);
+        CUDACHECK(status);
     }
     else if (inputDesc[0].dims.nbDims==5){
         cudaError_t status = grid_sampler_3d_cuda(stream,
-                                    inputs[0], 
-                                    inputs[1], 
-                                    outputs[0],
+                                    static_cast<const float*>(inputs[0]), 
+                                    static_cast<const float*>(inputs[1]), 
+                                    static_cast<float*>(outputs[0]),
                                     mMode,
                                     mPadding_mode,
                                     mAlign_corners,
