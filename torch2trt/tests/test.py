@@ -16,7 +16,6 @@ def run(self):
     # create module
     module = self.module_fn()
     module = module.to(self.device)
-    module = module.type(self.dtype)
     module = module.eval()
     
     # create inputs for conversion

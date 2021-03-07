@@ -824,6 +824,65 @@ def test_tensor_expand_inferdim():
 
 
 # ========================================================================
+# gather
+
+class Gather3d(nn.Module):
+    def __init__(self, dim):
+        super(Gather3d, self).__init__()
+        self.dim = dim
+        self.register_buffer('index', torch.randint(10, size=(1,32,32)))
+    def forward(self, x):
+        return torch.gather(x, self.dim, self.index)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,10,32)], alphabet='g')
+def test_gather3d_dim1():
+    return Gather3d(1)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,32,10)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1,32,10)], alphabet='g', dynamic_axes={2:[10, 32]})
+def test_gather3d_dim2():
+    return Gather3d(2)
+
+class Gather4d(nn.Module):
+    def __init__(self, dim):
+        super(Gather4d, self).__init__()
+        self.dim = dim
+        self.register_buffer('index', torch.randint(10, size=(1,32,32,32)))
+    def forward(self, x):
+        return torch.gather(x, self.dim, self.index)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,10,32,32)], alphabet='g')
+def test_gather4d_dim1():
+    return Gather4d(1)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,32,10,32)], alphabet='g')
+def test_gather4d_dim2():
+    return Gather4d(2)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,32,32,10)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1,32,32,10)], alphabet='g', dynamic_axes={3:[10, 32]})
+def test_gather4d_dim3():
+    return Gather4d(3)
+
+class Gather5d(nn.Module):
+    def __init__(self, dim):
+        super(Gather5d, self).__init__()
+        self.dim = dim
+        self.register_buffer('index', torch.randint(10, size=(1,32,32,32,32)))
+    def forward(self, x):
+        return torch.gather(x, self.dim, self.index)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,10,32,32,32)], alphabet='g')
+def test_gather5d_dim1():
+    return Gather5d(1)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1,32,32,10,32)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1,32,32,10,32)], alphabet='g', dynamic_axes={3:[10, 32]})
+def test_gather5d_dim3():
+    return Gather5d(3)
+
+
+# ========================================================================
 # getitem
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')

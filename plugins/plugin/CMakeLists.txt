@@ -33,6 +33,7 @@ set(PLUGIN_LISTS
     correlationPlugin
     gridSamplePlugin
     groupNormalizationPlugin
+    gatherElementsPlugin
 )
 
 # include_directories(common common/kernels)

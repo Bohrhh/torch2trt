@@ -164,9 +164,10 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
         # or... add constant for leaf tensor w/o _trt
         else:
             weight = t.detach().cpu().numpy()
+            if weight.dtype==np.int64:
+                weight = weight.astype(np.int32)
             t._trt = network.add_constant(weight.shape, weight).get_output(0)
             trt_tensor = t._trt
-
 
         assert trt_tensor is not None
 

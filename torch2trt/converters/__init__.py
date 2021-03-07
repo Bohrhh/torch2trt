@@ -21,6 +21,7 @@ from .conv_transpose import *
 from .correlation import *
 from .div import *
 from .expand import *
+from .gather import *
 from .getitem import *
 from .grid_sample import *
 from .group_norm import *
