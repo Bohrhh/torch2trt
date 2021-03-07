@@ -28,8 +28,6 @@ Reference: pytorch
 #include <string>
 #include <vector>
 
-#include "NvInfer.h"
-#include "NvInferPlugin.h"
 #include "plugin.h"
 #include "gridSampleKernels.h"
 

@@ -13,7 +13,7 @@ def convert_grid_sample(ctx):
     padding_mode  = get_arg(ctx, 'padding_mode',  pos=3, default='zeros')
     align_corners = get_arg(ctx, 'align_corners', pos=4, default=None)
     output        = ctx.method_return
-    assert input.dim()==4, "Only support tensors with 4 dimensions."
+    # assert input.dim()==4, "Only support tensors with 4 dimensions."
 
     mode = ['bilinear', 'nearest'].index(mode)
     padding_mode = ['zeros', 'border', 'reflection'].index(padding_mode)

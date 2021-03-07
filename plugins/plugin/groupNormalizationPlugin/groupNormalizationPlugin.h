@@ -17,12 +17,11 @@
 #ifndef TRT_GROUP_NORM_PLUGIN_H
 #define TRT_GROUP_NORM_PLUGIN_H
 
-#include "plugin.h"
-#include "serialize.hpp"
 #include <cudnn.h>
 #include <iostream>
 #include <string>
 #include <vector>
+#include "plugin.h"
 
 // One of the preferred ways of making TensorRT to be able to see
 // our custom layer requires extending IPluginV2 and IPluginCreator classes.

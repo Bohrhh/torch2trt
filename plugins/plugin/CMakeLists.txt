@@ -20,7 +20,7 @@ set(SHARED_TARGET ${TARGET_NAME})
 set(STATIC_TARGET ${TARGET_NAME}_static)
 
 set(TARGET_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(PLUGIN_EXPORT_MAP ${TARGET_DIR}/exports.map)
+# set(PLUGIN_EXPORT_MAP ${TARGET_DIR}/exports.map)
 
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
@@ -35,9 +35,7 @@ set(PLUGIN_LISTS
     groupNormalizationPlugin
 )
 
-
-# include_directories(common common/kernels ../samples/common)
-include_directories(common common/kernels)
+# include_directories(common common/kernels)
 
 foreach(PLUGIN_ITER ${PLUGIN_LISTS})
     include_directories(${PLUGIN_ITER})
@@ -45,7 +43,7 @@ foreach(PLUGIN_ITER ${PLUGIN_LISTS})
 endforeach(PLUGIN_ITER)
 
 # Add common
-add_subdirectory(common)
+# add_subdirectory(common)
 
 # Set gencodes
 set_source_files_properties(${PLUGIN_CU_SOURCES} PROPERTIES COMPILE_FLAGS ${GENCODES})
@@ -67,7 +65,7 @@ add_library(${SHARED_TARGET} SHARED
 target_include_directories(${SHARED_TARGET}
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PUBLIC ${CUB_ROOT_DIR}
-    PRIVATE ${PROJECT_SOURCE_DIR}/common
+    PRIVATE ${TARGET_DIR}/common
     PUBLIC ${CUDA_INSTALL_DIR}/include
     PRIVATE ${TARGET_DIR}
 )
@@ -81,7 +79,7 @@ set_target_properties(${SHARED_TARGET} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${TRT_OUT_DIR}"
 )
 
-set_target_properties(${SHARED_TARGET} PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL -Wl,--version-script=${PLUGIN_EXPORT_MAP} -Wl,--no-undefined")
+set_target_properties(${SHARED_TARGET} PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL -Wl,--no-undefined")
 
 # set_target_properties(${SHARED_TARGET} PROPERTIES DEBUG_POSTFIX ${TRT_DEBUG_POSTFIX})
 
@@ -107,7 +105,7 @@ add_library(${STATIC_TARGET} STATIC
 target_include_directories(${STATIC_TARGET}
     PUBLIC ${PROJECT_SOURCE_DIR}/include
     PUBLIC ${CUB_ROOT_DIR}
-    PRIVATE ${PROJECT_SOURCE_DIR}/common
+    PRIVATE ${TARGET_DIR}/common
     PUBLIC ${CUDA_INSTALL_DIR}/include
     PRIVATE ${TARGET_DIR}
 )

@@ -3,14 +3,16 @@ Author: kmlee
 Date: 20200828
  */
 
-#include "gridSamplePlugin.h"
 #include <cuda_runtime_api.h>
 #include <iostream>
+#include "gridSamplePlugin.h"
 
 using namespace nvinfer1;
 using namespace plugin;
 using nvinfer1::plugin::GridSample;
 using nvinfer1::plugin::GridSamplePluginCreator;
+
+#define DEBUG
                         
 namespace
 {
@@ -218,12 +220,11 @@ int GridSample::enqueue(const nvinfer1::PluginTensorDesc* inputDesc,
                                     inputDesc[1].dims.d[1], 
                                     inputDesc[1].dims.d[2],
                                     inputDesc[1].dims.d[3]);
-        ASSERT(status == cudaSuccess);
+        CUDACHECK(status);
     }
     else 
         ASSERT(false && "Input dimensions should be 4 or 5");
 
-    
     return 0;
 };
 

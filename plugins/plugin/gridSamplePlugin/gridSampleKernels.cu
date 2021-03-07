@@ -4,10 +4,13 @@ Date: 20200828
  */
 
 #include <vector>
-#include "plugin.h"
-#include "kernel.h"
-#include "NvInfer.h"
+#include <iostream>
 #include "gridSampleKernels.h"
+
+namespace nvinfer1
+{
+namespace plugin
+{
 
 static __forceinline__ __device__
 bool within_bounds_2d(int h, int w, int H, int W) {
@@ -207,7 +210,7 @@ __global__ void grid_sampler_3d_kernel(
   GridSamplerInterpolation interpolation_mode,
   GridSamplerPadding padding_mode,
   bool align_corners) {
-
+  
   int inp_sN = C*inp_D*inp_H*inp_W;
   int inp_sC = inp_D*inp_H*inp_W;
   int inp_sD = inp_H*inp_W;
@@ -392,9 +395,8 @@ cudaError_t grid_sampler_3d_cuda(
     int grid_W) 
 {
     int count = batch * grid_D * grid_H * grid_W;
-
     grid_sampler_3d_kernel<float>
-        <<<(count + 1024 - 1) / 1024, 1024, 0, stream>>>(
+        <<<(count + 512 - 1) / 512, 512, 0, stream>>>(
             count,
             static_cast<const float*>(input),
             static_cast<const float*>(grid),
@@ -411,3 +413,6 @@ cudaError_t grid_sampler_3d_cuda(
             align_corners);
     return cudaGetLastError();
 }
+
+} // namespace plugin
+} // namespace nvinfer1

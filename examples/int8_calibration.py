@@ -30,7 +30,7 @@ class ImagenetSet(Dataset):
         return img
 
     def __len__(self):
-        return 10
+        return 100
 
 def main():
     model = models.resnet50(pretrained=True)

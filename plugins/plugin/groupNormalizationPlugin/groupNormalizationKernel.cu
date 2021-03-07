@@ -53,7 +53,7 @@ void scaleShiftChannelsInplace(T* inOut, const int B, const int C, const int cha
 
     scaleShiftChannelsInplaceKernel<T, TPB><<<grid, TPB, 0, stream>>>(inOut, channelVolume, beta, gamma);
 
-    CUASSERT(cudaPeekAtLastError());
+    CUDACHECK(cudaPeekAtLastError());
 }
 
 template void scaleShiftChannelsInplace<float>(float* inOut, const int B, const int C, const int channelVolume, const float* beta,

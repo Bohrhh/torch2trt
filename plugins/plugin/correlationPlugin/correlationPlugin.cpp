@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "correlationPlugin.h"
 #include <cuda_runtime_api.h>
 #include <iostream>
+#include "correlationPlugin.h"
 
 using namespace nvinfer1;
 using namespace plugin;

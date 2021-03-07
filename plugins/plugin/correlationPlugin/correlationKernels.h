@@ -5,10 +5,11 @@ Date: 20200525
 
 #ifndef TRT_CORRELATION_KERNEL_H
 #define TRT_CORRELATION_KERNEL_H
-#include "plugin.h"
-using namespace nvinfer1;
-using namespace nvinfer1::plugin;
 
+namespace nvinfer1
+{
+namespace plugin
+{
 
 void correlation (
     cudaStream_t stream,
@@ -23,5 +24,8 @@ void correlation (
     int32_t w,
     bool is_time,
     bool is_mean);
+
+} // namespace plugin
+} // namespace nvinfer1
 
 #endif

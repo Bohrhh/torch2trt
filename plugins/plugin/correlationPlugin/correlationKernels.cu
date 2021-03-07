@@ -4,11 +4,12 @@ Date: 20200525
  */
 
 #include <vector>
-#include "plugin.h"
-#include "kernel.h"
-#include "NvInfer.h"
 #include "correlationKernels.h"
 
+namespace nvinfer1
+{
+namespace plugin
+{
 
 template <typename T>
 __global__ void correlation_kernel(
@@ -97,3 +98,6 @@ void correlation(
         is_time,
         is_mean);
 }
+
+} // namespace plugin
+} // namespace nvinfer1

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "groupNormalizationPlugin.h"
 #include <numeric>
 #include <stdexcept>
+#include "groupNormalizationPlugin.h"
 
 using namespace nvinfer1;
 using nvinfer1::plugin::GroupNormalizationPlugin;
@@ -49,19 +49,12 @@ GroupNormalizationPlugin::GroupNormalizationPlugin(float epsilon, int nbGroups)
     , mNbGroups(nbGroups)
 {
     // Number of groups should be positive
-    assert(nbGroups > 0);
+    ASSERT(nbGroups > 0);
 }
 
 int GroupNormalizationPlugin::initialize()
 {
     return 0;
-}
-
-GroupNormalizationPlugin::GroupNormalizationPlugin(const void* data, size_t length)
-{
-    // Deserialize in the same order as serialization
-    deserialize_value(&data, &length, &mEpsilon);
-    deserialize_value(&data, &length, &mNbGroups);
 }
 
 const char* GroupNormalizationPlugin::getPluginType() const
@@ -83,8 +76,8 @@ nvinfer1::DimsExprs GroupNormalizationPlugin::getOutputDimensions(
     int index, const nvinfer1::DimsExprs* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder)
 {
     // Input (from previous layer), scale and bias are the three inputs to the plugin.
-    assert(nbInputs == 3);
-    assert(index == 0);
+    ASSERT(nbInputs == 3);
+    ASSERT(index == 0);
     nvinfer1::DimsExprs output(inputs[0]);
     return output;
 }
@@ -166,14 +159,25 @@ size_t GroupNormalizationPlugin::getSerializationSize() const
 
 void GroupNormalizationPlugin::serialize(void* buffer) const
 {
-    serialize_value(&buffer, mEpsilon);
-    serialize_value(&buffer, mNbGroups);
+    char *d = reinterpret_cast<char*>(buffer), *a = d;
+    write(d, mEpsilon);
+    write(d, mNbGroups);
+    ASSERT(d == a + getSerializationSize());
+}
+
+GroupNormalizationPlugin::GroupNormalizationPlugin(const void* data, size_t length)
+{
+    // Deserialize in the same order as serialization
+    const char *d = reinterpret_cast<const char*>(data), *a = d;
+    mEpsilon = read<float>(d);
+    mNbGroups = read<int>(d);
+    ASSERT(d == a + length);
 }
 
 bool GroupNormalizationPlugin::supportsFormatCombination(
     int pos, const nvinfer1::PluginTensorDesc* inOut, int nbInputs, int nbOutputs)
 {
-    assert(inOut && pos < (nbInputs + nbOutputs));
+    ASSERT(inOut && pos < (nbInputs + nbOutputs));
     return ((inOut[pos].type == nvinfer1::DataType::kFLOAT) && inOut[pos].format == nvinfer1::PluginFormat::kNCHW
         && inOut[pos].type == inOut[0].type);
 }
@@ -206,7 +210,7 @@ void GroupNormalizationPlugin::configurePlugin(const nvinfer1::DynamicPluginTens
         for (int j = 0; j < in[0].desc.dims.nbDims; j++)
         {
             // Do not support dynamic dimensions
-            assert(in[0].desc.dims.d[j] != -1);
+            ASSERT(in[0].desc.dims.d[j] != -1);
         }
     }
 
@@ -228,7 +232,7 @@ void GroupNormalizationPlugin::configurePlugin(const nvinfer1::DynamicPluginTens
 nvinfer1::DataType GroupNormalizationPlugin::getOutputDataType(
     int index, const nvinfer1::DataType* inputTypes, int nbInputs) const
 {
-    assert(inputTypes && nbInputs > 0 && index == 0);
+    ASSERT(inputTypes && nbInputs > 0 && index == 0);
     return inputTypes[0];
 }
 
