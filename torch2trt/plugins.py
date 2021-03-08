@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch2trt.opts.dcn import ModulatedDeformConvFunction
+from torch2trt.opts.dcn import ModulatedDeformConvPack
 
 class Correlation_TRT(nn.Module):
     def __init__(self, max_disp, stride=1, mode='time', reduction='mean'):
@@ -23,3 +25,4 @@ class Correlation_TRT(nn.Module):
             t = t.mean(dim=1, keepdims=True) if self.reduction=='mean' else t.sum(dim=1, keepdims=True)
             cost_tensors.append(t)
         return torch.cat(cost_tensors, dim=1)
+

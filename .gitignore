@@ -22,3 +22,4 @@ torch2trt_test.md
 .gitignore
 /examples/models
 /opts/
+/torch2trt/opts/

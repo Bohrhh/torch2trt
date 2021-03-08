@@ -748,6 +748,16 @@ def test_correlation_time_sum():
 def test_correlation_l1_sum():
     return plugins.Correlation_TRT(max_disp=5, stride=1, mode='l1', reduction='sum')
 
+
+# ========================================================================
+# deformable_conv_v2
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0', alphabet='d')
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)], enabled=trt_version() >= '7.0', alphabet='d', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_dcnv2_k1s1p0d1():
+    return plugins.ModulatedDeformConvPack(10, 5, kernel_size=1, stride=1, padding=0, dilation=1)
+
+
 # ========================================================================
 # div
 

@@ -19,6 +19,7 @@ from .compare import *
 from .conv import *
 from .conv_transpose import *
 from .correlation import *
+from .deformable_conv_v2 import *
 from .div import *
 from .expand import *
 from .gather import *

@@ -10,7 +10,6 @@
 #include "plugin.h"
 #include "deform_conv_cuda.h"
 
-
 namespace nvinfer1
 {
 namespace plugin
