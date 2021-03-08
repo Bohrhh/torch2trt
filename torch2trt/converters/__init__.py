@@ -49,6 +49,7 @@ from .split import *
 from .stack import *
 from .sub import *
 from .sum import *
+from .topk import *
 from .transpose import *
 from .unary import *
 from .view import *

@@ -1821,6 +1821,37 @@ def test_sum_dim1_keepdim():
 def test_sum_dim1_keepdims():
     return TestInterface(lambda x: torch.sum(x, 1, keepdims=True))
 
+
+# ========================================================================
+# topk
+
+@add_module_test(torch.float32, torch.device("cuda"), [(32,)],         alphabet='t')
+@add_module_test(torch.float32, torch.device("cuda"), [(32, 32)],      alphabet='t')
+def test_topk_dim0():
+    return TestInterface(lambda x: torch.topk(x, 8, dim=0))
+
+@add_module_test(torch.float32, torch.device("cuda"), [(32,)],         alphabet='t')
+def test_topk_dim0_ascending():
+    return TestInterface(lambda x: torch.topk(x, 8, largest=False))
+
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 32)],       alphabet='t')
+def test_topk_dim1():
+    return TestInterface(lambda x: torch.topk(x, 8, dim=1))
+
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 32)],       alphabet='t')
+def test_topk_dim1_ascending():
+    return TestInterface(lambda x: torch.topk(x, 8, dim=1, largest=False))
+
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 1, 32)],    alphabet='t')
+def test_topk_dim2():
+    return TestInterface(lambda x: torch.topk(x, 8, dim=2))
+
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 1, 1, 32)], alphabet='t')
+@add_module_test(torch.float32, torch.device("cuda"), [(1, 1, 1, 32)], alphabet='t', dynamic_axes={0:[1,32], 1:[1,32], 2:[1,32], 3:[8,32]})
+def test_topk_dimNone():
+    return TestInterface(lambda x: torch.topk(x, 8))
+
+
 # ========================================================================
 # transpose
 

@@ -34,6 +34,7 @@ set(PLUGIN_LISTS
     gridSamplePlugin
     groupNormalizationPlugin
     gatherElementsPlugin
+    deformableConvPlugin
 )
 
 # include_directories(common common/kernels)
