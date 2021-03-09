@@ -9,7 +9,7 @@ def convert_batch_norm(ctx):
     running_var  = get_arg(ctx, 'running_var' , pos=2, default=None) 
     weight       = get_arg(ctx, 'weight'      , pos=3, default=None) 
     bias         = get_arg(ctx, 'bias'        , pos=4, default=None) 
-    eps          = get_arg(ctx, 'eps'         , pos=7, default=10e-6) 
+    eps          = get_arg(ctx, 'eps'         , pos=7, default=1e-5) 
     output       = ctx.method_return
 
     # get tensorrt input
@@ -18,9 +18,14 @@ def convert_batch_norm(ctx):
     # add tensorrt layer
     input_dim = input.dim() - 2
     
-    scale = weight.detach().cpu().numpy() / np.sqrt(running_var.detach().cpu().numpy() + eps)
-    bias  = bias.detach().cpu().numpy() - running_mean.detach().cpu().numpy() * scale
-    power = np.ones_like(scale)
+    if weight is not None:
+        scale = weight.detach().cpu().numpy() / np.sqrt(running_var.detach().cpu().numpy() + eps)
+        bias  = bias.detach().cpu().numpy() - running_mean.detach().cpu().numpy() * scale
+        power = np.ones_like(scale)
+    else:
+        scale = 1.0/np.sqrt(running_var.detach().cpu().numpy() + eps)
+        bias  = - running_mean.detach().cpu().numpy() * scale
+        power = np.ones_like(scale)
 
     # if batch norm 1d, reshape to 2D
     if input_dim == 1:

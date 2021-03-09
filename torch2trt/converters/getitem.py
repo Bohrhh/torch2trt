@@ -20,8 +20,7 @@ def num_slice_types(slices):
     return num_slice
 
 
-@tensorrt_converter('torch.Tensor.__getitem__')
-def convert_tensor_getitem(ctx):
+def convert_getitem_slice(ctx):
     # parse args
     input  = ctx.method_args[0]
     slices = ctx.method_args[1]
@@ -94,3 +93,17 @@ def convert_tensor_getitem(ctx):
         
     output._trt = output_trt
         
+
+@tensorrt_converter('torch.Tensor.__getitem__')
+def convert_tensor_getitem(ctx):
+    # parse args
+    x     = ctx.method_args[1]
+
+    if isinstance(x, torch.Tensor):
+        assert False, 'Do not implemented tensor idx now'
+    elif isinstance(x, tuple) and any([isinstance(i, list) for i in x]):
+        assert False, 'Do not implemented list idx now'
+    elif isinstance(x, list):
+        assert False, 'Do not implemented list idx now'
+    else:
+        convert_getitem_slice(ctx)
