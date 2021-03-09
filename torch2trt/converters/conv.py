@@ -1,21 +1,23 @@
 from torch2trt.utils import *
 
-
-@tensorrt_converter('torch.nn.Conv1d.forward', enabled=trt_version() >= '7.0')
-@tensorrt_converter('torch.nn.Conv2d.forward', enabled=trt_version() >= '7.0')
-@tensorrt_converter('torch.nn.Conv3d.forward', enabled=trt_version() >= '7.0')
-def convert_conv(ctx):
+@tensorrt_converter('torch.nn.functional.conv1d', enabled=trt_version() >= '7.0')
+@tensorrt_converter('torch.nn.functional.conv2d', enabled=trt_version() >= '7.0')
+@tensorrt_converter('torch.nn.functional.conv3d', enabled=trt_version() >= '7.0')
+def convert_conv_function(ctx):
     # parse args
-    module      = ctx.method_args[0]
-    input       = ctx.method_args[1]
-    kernel_size = module.kernel_size
-    stride      = module.stride
-    padding     = module.padding
-    dilation    = module.dilation
-    groups      = module.groups
-    kernel      = module.weight.detach().cpu().numpy()
-    bias        = module.bias.detach().cpu().numpy() if module.bias is not None else None
-    output      = ctx.method_return
+    input        = ctx.method_args[0]
+    weight       = ctx.method_args[1]
+    kernel_size  = tuple(weight.shape[2:])
+    out_channels = weight.shape[0]
+    bias         = get_arg(ctx, 'bias'    , pos=2, default=None)
+    stride       = get_arg(ctx, 'stride'  , pos=3, default=1)
+    padding      = get_arg(ctx, 'padding' , pos=4, default=0)
+    dilation     = get_arg(ctx, 'dilation', pos=5, default=1)
+    groups       = get_arg(ctx, 'groups'  , pos=6, default=1)
+
+    kernel       = weight.detach().cpu().numpy()
+    bias         = bias.detach().cpu().numpy() if bias is not None else None
+    output       = ctx.method_return
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
@@ -42,7 +44,7 @@ def convert_conv(ctx):
 
     layer = ctx.network.add_convolution_nd(
         input=input_trt,
-        num_output_maps=module.out_channels,
+        num_output_maps=out_channels,
         kernel_shape=kernel_size,
         kernel=kernel,
         bias=bias)

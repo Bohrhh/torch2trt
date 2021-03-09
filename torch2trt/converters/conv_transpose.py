@@ -16,6 +16,9 @@ def convert_ConvTranspose2d_trt7(ctx):
     bias        = module.bias.detach().cpu().numpy() if module.bias is not None else None
     output      = ctx.method_return
 
+    assert module.padding_mode == 'zeros'
+    assert module.output_padding == 0
+
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
 
