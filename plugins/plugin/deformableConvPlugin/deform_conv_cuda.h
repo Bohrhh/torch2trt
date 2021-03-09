@@ -24,8 +24,8 @@ typedef struct _DCN_PARAMS {
   int padH = 0;
   int dilationW = 1;
   int dilationH = 1;
-  int group = 1;
-  int deformable_group = 1;
+  int groups = 1;
+  int deformable_groups = 1;
   int im2col_step = 64;
 } DCN_PARAMS;
 

@@ -25,8 +25,8 @@ cudaError_t modulated_deform_conv_cuda_forward(cudaStream_t stream,
   int pad_h = dcn_params.padH;
   int dilation_w = dcn_params.dilationW;
   int dilation_h = dcn_params.dilationH;
-  int group = dcn_params.group;
-  int deformable_group = dcn_params.deformable_group;
+  int group = dcn_params.groups;
+  int deformable_group = dcn_params.deformable_groups;
   int im2col_step = dcn_params.im2col_step;
 
   int batch = dcn_params.batchSize;

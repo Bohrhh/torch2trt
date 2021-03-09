@@ -41,8 +41,8 @@ ModulatedDeformableConvPluginCreator::ModulatedDeformableConvPluginCreator()
     mPluginAttributes.emplace_back(PluginField("stride", nullptr, PluginFieldType::kINT32, 2));
     mPluginAttributes.emplace_back(PluginField("padding", nullptr, PluginFieldType::kINT32, 2));
     mPluginAttributes.emplace_back(PluginField("dilation", nullptr, PluginFieldType::kINT32, 2));
-    mPluginAttributes.emplace_back(PluginField("group", nullptr, PluginFieldType::kINT32, 1));
-    mPluginAttributes.emplace_back(PluginField("deformable_group", nullptr, PluginFieldType::kINT32, 1));
+    mPluginAttributes.emplace_back(PluginField("groups", nullptr, PluginFieldType::kINT32, 1));
+    mPluginAttributes.emplace_back(PluginField("deformable_groups", nullptr, PluginFieldType::kINT32, 1));
 
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();
@@ -69,8 +69,8 @@ IPluginV2DynamicExt* ModulatedDeformableConvPluginCreator::createPlugin(const ch
     nvinfer1::Dims padding{2, {0, 0}};
     nvinfer1::Dims dilation{2, {1, 1}};
 
-    int deformableGroup = 1;
-    int group = 1;
+    int deformableGroups = 1;
+    int groups = 1;
 
     const PluginField* fields = fc->fields;
     for (int i = 0; i < fc->nbFields; ++i)
@@ -97,20 +97,20 @@ IPluginV2DynamicExt* ModulatedDeformableConvPluginCreator::createPlugin(const ch
             dilation.d[1] = static_cast<const int *>(fc->fields[i].data)[1];
         }
 
-        if (!strcmp(attrName, "group"))
+        if (!strcmp(attrName, "groups"))
         {   
             ASSERT(fields[i].type == PluginFieldType::kINT32);
-            group = *(static_cast<const int*>(fields[i].data));
+            groups = *(static_cast<const int*>(fields[i].data));
         }
 
-        if (!strcmp(attrName, "deformable_group"))
+        if (!strcmp(attrName, "deformable_groups"))
         {   
             ASSERT(fields[i].type == PluginFieldType::kINT32);
-            deformableGroup = *(static_cast<const int*>(fields[i].data));
+            deformableGroups = *(static_cast<const int*>(fields[i].data));
         }
 
     }
-    return new ModulatedDeformableConv(stride, padding, dilation, group, deformableGroup);
+    return new ModulatedDeformableConv(stride, padding, dilation, groups, deformableGroups);
 };
 
 IPluginV2DynamicExt* ModulatedDeformableConvPluginCreator::deserializePlugin(const char* name, const void* data, size_t length)
@@ -122,14 +122,16 @@ ModulatedDeformableConv::ModulatedDeformableConv(
     const nvinfer1::Dims &stride, 
     const nvinfer1::Dims &padding,
     const nvinfer1::Dims &dilation,
-    int group,
-    int deformable_group)
+    int groups,
+    int deformable_groups)
     : mStride(stride), 
       mPadding(padding), 
       mDilation(dilation),
-      mGroup(group), 
-      mDeformableGroup(deformable_group)
-{mWithBias = false;};
+      mGroups(groups), 
+      mDeformableGroups(deformable_groups)
+{
+    mWithBias = false;
+};
 
 
 int ModulatedDeformableConv::getNbOutputs() const
@@ -142,7 +144,7 @@ DimsExprs ModulatedDeformableConv::getOutputDimensions(int outputIndex, const nv
     nvinfer1::DimsExprs output;
     output.nbDims = 4;
     output.d[0] = inputs[0].d[0];
-    output.d[1] = inputs[2].d[0];
+    output.d[1] = inputs[3].d[0];
     output.d[2] = inputs[1].d[2];
     output.d[3] = inputs[1].d[3];
     return output;
@@ -187,7 +189,7 @@ size_t ModulatedDeformableConv::getWorkspaceSize(const nvinfer1::PluginTensorDes
 size_t ModulatedDeformableConv::getSerializationSize() const
 {
   return sizeof(mStride) + sizeof(mPadding) + sizeof(mDilation) +
-         sizeof(mDeformableGroup) + sizeof(mGroup);
+         sizeof(mDeformableGroups) + sizeof(mGroups);
 };
 
 void ModulatedDeformableConv::serialize(void* buffer) const
@@ -195,8 +197,8 @@ void ModulatedDeformableConv::serialize(void* buffer) const
     serialize_value(&buffer, mStride);
     serialize_value(&buffer, mPadding);
     serialize_value(&buffer, mDilation);
-    serialize_value(&buffer, mDeformableGroup);
-    serialize_value(&buffer, mGroup);
+    serialize_value(&buffer, mDeformableGroups);
+    serialize_value(&buffer, mGroups);
 };
 
 ModulatedDeformableConv::ModulatedDeformableConv(const void* data, size_t length)
@@ -204,8 +206,8 @@ ModulatedDeformableConv::ModulatedDeformableConv(const void* data, size_t length
     deserialize_value(&data, &length, &mStride);
     deserialize_value(&data, &length, &mPadding);
     deserialize_value(&data, &length, &mDilation);
-    deserialize_value(&data, &length, &mDeformableGroup);
-    deserialize_value(&data, &length, &mGroup);
+    deserialize_value(&data, &length, &mDeformableGroups);
+    deserialize_value(&data, &length, &mGroups);
     mWithBias = false;
 };
 
@@ -261,8 +263,8 @@ int ModulatedDeformableConv::enqueue(const nvinfer1::PluginTensorDesc* inputDesc
     dcn_params.cublas_handle = m_cublas_handle;
     dcn_params.batchSize = inputDesc[0].dims.d[0];
     dcn_params.inputChannel = inputDesc[0].dims.d[1];
-    dcn_params.inputW = inputDesc[0].dims.d[2];
-    dcn_params.inputH = inputDesc[0].dims.d[3];
+    dcn_params.inputH = inputDesc[0].dims.d[2];
+    dcn_params.inputW = inputDesc[0].dims.d[3];
     dcn_params.outputChannel = inputDesc[3].dims.d[0];
     dcn_params.kernelChannels = inputDesc[3].dims.d[1];
     dcn_params.kernelW = inputDesc[3].dims.d[2];
@@ -273,8 +275,8 @@ int ModulatedDeformableConv::enqueue(const nvinfer1::PluginTensorDesc* inputDesc
     dcn_params.padH = mPadding.d[1];
     dcn_params.dilationW = mDilation.d[0];
     dcn_params.dilationH = mDilation.d[1];
-    dcn_params.group = mGroup;
-    dcn_params.deformable_group = mDeformableGroup;
+    dcn_params.groups = mGroups;
+    dcn_params.deformable_groups = mDeformableGroups;
     dcn_params.im2col_step = std::min(32, dcn_params.batchSize);
 
     const float *bias = mWithBias ? static_cast<const float*>(inputs[4]) : nullptr;

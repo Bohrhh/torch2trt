@@ -20,7 +20,7 @@ public:
     ModulatedDeformableConv(const nvinfer1::Dims &stride,
                             const nvinfer1::Dims &padding,
                             const nvinfer1::Dims &dilation,
-                            int deformableGroup, int group);
+                            int deformableGroups, int groups);
 
     ModulatedDeformableConv(const void* data, size_t length);
 
@@ -76,8 +76,8 @@ private:
     nvinfer1::Dims mStride;
     nvinfer1::Dims mPadding;
     nvinfer1::Dims mDilation;
-    int mDeformableGroup;
-    int mGroup;
+    int mDeformableGroups;
+    int mGroups;
     bool mWithBias;
     std::string mNameSpace;
 

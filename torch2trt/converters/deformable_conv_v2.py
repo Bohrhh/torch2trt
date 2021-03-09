@@ -6,7 +6,6 @@ from torch2trt.utils import *
 @tensorrt_converter('torch2trt.plugins.ModulatedDeformConvFunction.forward', enabled=trt_version() >= '7.0')
 def convert_dcnv2(ctx):
     # parse args
-    print("=======dcnv2=========")
     input    = ctx.method_args[1]
     offset   = ctx.method_args[2]
     mask     = ctx.method_args[3]
@@ -39,11 +38,11 @@ def convert_dcnv2(ctx):
     creator = trt.get_plugin_registry().get_plugin_creator('ModulatedDeformableConvPlugin', '1')
     assert creator is not None, 'Has no ModulatedDeformableConvPlugin version 1'
     fc = []
-    fc.append(trt.PluginField(name='stride',           data=np.array(stride,              dtype=np.int32),   type=trt.PluginFieldType.INT32))
-    fc.append(trt.PluginField(name='padding',          data=np.array(padding,             dtype=np.int32),   type=trt.PluginFieldType.INT32))
-    fc.append(trt.PluginField(name='dilation',         data=np.array(dilation,            dtype=np.int32),   type=trt.PluginFieldType.INT32))
-    fc.append(trt.PluginField(name='group',            data=np.array([groups],            dtype=np.int32),   type=trt.PluginFieldType.INT32))
-    fc.append(trt.PluginField(name='deformable_group', data=np.array([deformable_groups], dtype=np.int32),   type=trt.PluginFieldType.INT32))
+    fc.append(trt.PluginField(name='stride',            data=np.array(stride,              dtype=np.int32),   type=trt.PluginFieldType.INT32))
+    fc.append(trt.PluginField(name='padding',           data=np.array(padding,             dtype=np.int32),   type=trt.PluginFieldType.INT32))
+    fc.append(trt.PluginField(name='dilation',          data=np.array(dilation,            dtype=np.int32),   type=trt.PluginFieldType.INT32))
+    fc.append(trt.PluginField(name='groups',            data=np.array([groups],            dtype=np.int32),   type=trt.PluginFieldType.INT32))
+    fc.append(trt.PluginField(name='deformable_groups', data=np.array([deformable_groups], dtype=np.int32),   type=trt.PluginFieldType.INT32))
     fc = trt.PluginFieldCollection(fc)
 
     plugin = creator.create_plugin('ModulatedDeformableConvPlugin', fc)
@@ -51,4 +50,3 @@ def convert_dcnv2(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
