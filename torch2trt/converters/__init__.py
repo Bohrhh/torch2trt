@@ -7,7 +7,6 @@ from .dummy_converters import *
 from .activation import *
 from .adaptive_avg_pool2d import *
 from .adaptive_max_pool2d import *
-from .add import *
 from .argmax import *
 from .argmin import *
 from .avg_pool import *
@@ -20,7 +19,7 @@ from .conv import *
 from .conv_transpose import *
 from .correlation import *
 from .deformable_conv_v2 import *
-from .div import *
+from .elementwise import *
 from .expand import *
 from .gather import *
 from .getitem import *
@@ -36,7 +35,6 @@ from .max import *
 from .max_pool import *
 from .mean import *
 from .min import *
-from .mul import *
 from .narrow import *
 from .normalize import *
 from .pad import *
@@ -48,7 +46,6 @@ from .size import *
 from .softmax import *
 from .split import *
 from .stack import *
-from .sub import *
 from .sum import *
 from .topk import *
 from .transpose import *
