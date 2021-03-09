@@ -155,65 +155,6 @@ def test_adaptive_max_pool2d_4x4():
 
 
 # ========================================================================
-# add
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='a')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='a', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_add_basic():
-    return TestInterface(lambda x, y: x+y)
-
-class IAdd(torch.nn.Module):
-    def __init__(self):
-        super(IAdd, self).__init__()
-
-    def forward(self, x, y):
-        x += y
-        return x
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='a')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='a', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_add_iadd():
-    return IAdd()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='a')
-def test_add_torch():
-    return TestInterface(lambda x, y: torch.add(x, y))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='a')
-def test_add_radd_int():
-    return TestInterface(lambda x: 1 + x)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='a')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='a', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_add_radd_float():
-    return TestInterface(lambda x: 1.0 + x)
-
-class AddConstantNoBatch(torch.nn.Module):
-    def __init__(self):
-        super(AddConstantNoBatch, self).__init__()
-        self.register_buffer('y', torch.ones((3, 10, 10)))
-
-    def forward(self, x):
-        return x + self.y
-    
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='a')
-def test_add_constant_nobatch():
-    return AddConstantNoBatch()
-
-class AddConstantBatch(torch.nn.Module):
-    def __init__(self):
-        super(AddConstantBatch, self).__init__()
-        self.register_buffer('y', torch.ones((1, 3, 10, 10)))
-
-    def forward(self, x):
-        return x + self.y
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='a')
-def test_add_constant_batch():
-    return AddConstantBatch()
-
-
-# ========================================================================
 # argmax
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],       alphabet='a')
@@ -427,6 +368,25 @@ def test_batch_norm_3d_noAffine():
 
 
 # ========================================================================
+# cast
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', fp16_mode=True)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', dynamic_axes={0:[1,32], 1:[1, 40]}, fp16_mode=True)
+def test_cast_fp16():
+    return TestInterface(lambda x: x.to(torch.float16))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', dynamic_axes={0:[1,32], 1:[1, 40]})
+def test_cast_int32():
+    return TestInterface(lambda x: (x*10).to(torch.int32))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', dynamic_axes={0:[1,32], 1:[1, 40]})
+def test_cast_int64():
+    return TestInterface(lambda x: (x*10).to(torch.int64))
+
+
+# ========================================================================
 # cat
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 3, 4), (1, 17, 4)], alphabet='c')
@@ -526,36 +486,6 @@ def test_tensor_clamp_option_min():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='c', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
 def test_tensor_clamp_max_min():
     return TestInterface(lambda x: x.clamp(min=-0.1, max=0.1))
-
-
-# ========================================================================
-# compare
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
-def test_gt_tensor():
-    return TestInterface(lambda x, y: x>y)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
-def test_gt_float():
-    return TestInterface(lambda x: x>0.1)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
-def test_lt_tensor():
-    return TestInterface(lambda x, y: x<y)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
-def test_lt_float():
-    return TestInterface(lambda x: x<0.1)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
-def test_eq_tensor():
-    return TestInterface(lambda x, y: x==y)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
-def test_eq_float():
-    return TestInterface(lambda x: x==0.1)
 
 
 # ========================================================================
@@ -793,10 +723,191 @@ def test_dcnv2_k3s2p1d2_nobias():
 
 
 # ========================================================================
+# elementwise
+# add
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_add_basic():
+    return TestInterface(lambda x, y: x+y)
+
+class IAdd(torch.nn.Module):
+    def __init__(self):
+        super(IAdd, self).__init__()
+
+    def forward(self, x, y):
+        x += y
+        return x
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_add_iadd():
+    return IAdd()
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+def test_add_torch():
+    return TestInterface(lambda x, y: torch.add(x, y))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e')
+def test_add_radd_int():
+    return TestInterface(lambda x: 1 + x)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_add_radd_float():
+    return TestInterface(lambda x: 1.0 + x)
+
+class AddConstantNoBatch(torch.nn.Module):
+    def __init__(self):
+        super(AddConstantNoBatch, self).__init__()
+        self.register_buffer('y', torch.ones((3, 10, 10)))
+
+    def forward(self, x):
+        return x + self.y
+    
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_add_constant_nobatch():
+    return AddConstantNoBatch()
+
+class AddConstantBatch(torch.nn.Module):
+    def __init__(self):
+        super(AddConstantBatch, self).__init__()
+        self.register_buffer('y', torch.ones((1, 3, 10, 10)))
+
+    def forward(self, x):
+        return x + self.y
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_add_constant_batch():
+    return AddConstantBatch()
+
+
+# ========================================================================
+# elementwise
+# sub
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_sub_basic():
+    return TestInterface(lambda x, y: x-y)
+
+class ISub(torch.nn.Module):
+    def __init__(self):
+        super(ISub, self).__init__()
+
+    def forward(self, x, y):
+        x -= y
+        return x
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_sub_isub():
+    return ISub()
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+def test_torch_sub():
+    return TestInterface(lambda x, y: torch.sub(x, y))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e')
+def test_rsub_int():
+    return TestInterface(lambda x: 1-x)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_rsub_float():
+    return TestInterface(lambda x: 1.0-x)
+
+class SubConstantNoBatch(torch.nn.Module):
+    def __init__(self):
+        super(SubConstantNoBatch, self).__init__()
+        self.register_buffer('y', torch.ones((3, 10, 10)))
+
+    def forward(self, x):
+        return x - self.y
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_sub_constant_nobatch():
+    return SubConstantNoBatch()
+
+class SubConstantBatch(torch.nn.Module):
+    def __init__(self):
+        super(SubConstantBatch, self).__init__()
+        self.register_buffer('y', torch.ones((1, 3, 10, 10)))
+
+    def forward(self, x):
+        return x - self.y
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_sub_constant_batch():
+    return SubConstantBatch()
+
+
+# ========================================================================
+# elementwise
+# mul
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_mul_basic():
+    return TestInterface(lambda x, y: x*y)
+
+class IMul(torch.nn.Module):
+    def __init__(self):
+        super(IMul, self).__init__()
+
+    def forward(self, x, y):
+        x *= y
+        return x
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_mul_imul():
+    return IMul()
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+def test_mul_torchmul():
+    return TestInterface(lambda x, y: torch.mul(x, y))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='e')
+def test_rmul_int():
+    return TestInterface(lambda x: 10*x)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='e', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
+def test_rmul_float():
+    return TestInterface(lambda x: 10.0*x)
+
+class MulConstantNoBatch(torch.nn.Module):
+    def __init__(self):
+        super(MulConstantNoBatch, self).__init__()
+        self.register_buffer('y', torch.ones((3, 10, 10)))
+
+    def forward(self, x):
+        return x * self.y
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_mul_constant_nobatch():
+    return MulConstantNoBatch()
+
+class MulConstantBatch(torch.nn.Module):
+    def __init__(self):
+        super(MulConstantBatch, self).__init__()
+        self.register_buffer('y', torch.ones((1, 3, 10, 10)))
+
+    def forward(self, x):
+        return x * self.y
+    
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_mul_constant_batch():
+    return MulConstantBatch()
+
+
+# ========================================================================
+# elementwise
 # div
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='d')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],         alphabet='d', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],         alphabet='e', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_div_basic():
     return TestInterface(lambda x, y: x / y)
 
@@ -808,21 +919,21 @@ class IDiv(torch.nn.Module):
         x /= y
         return x
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='d')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],         alphabet='d', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],         alphabet='e', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_div_idiv():
     return IDiv()
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='d')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='e')
 def test_div_torch():
     return TestInterface(lambda x, y: torch.div(x, y))
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='d')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e')
 def test_rdiv_int():
     return TestInterface(lambda x: 1 / x)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='d')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)],                       alphabet='d', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5)],                       alphabet='e', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
 def test_rdiv_float():
     return TestInterface(lambda x: 1.0 / x)
 
@@ -834,7 +945,7 @@ class DivConstantNoBatch(torch.nn.Module):
     def forward(self, x):
         return x / self.y
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='d')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
 def test_div_constant_nobatch():
     return DivConstantNoBatch()
 
@@ -846,9 +957,111 @@ class DivConstantBatch(torch.nn.Module):
     def forward(self, x):
         return x / self.y
     
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='d')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
 def test_div_constant_batch():
     return DivConstantBatch()
+
+
+# ========================================================================
+# elementwise
+# and
+
+@add_module_test(torch.float32, torch.device('cuda'), [(4, ),     (1, 3, 4)],             alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4), (1, 3, 4)],             alphabet='e', dynamic_axes={0:[1,32], 1:[3,40], 2:[4,40]})
+def test_and_3d_basic():
+    return TestInterface(lambda x, y: (x>0.5) & (y>0.5))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (4, 5,     )],       alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],       alphabet='e', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_and_4d_basic():
+    return TestInterface(lambda x, y: (x>0.5) & (y>0.5))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5, 6), (1, 3, 4, 5, 6)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5, 6), (1, 3, 4, 5, 6)], alphabet='e', dynamic_axes={0:[1,32], 3:[5,50], 4:[6, 60]})
+def test_and_5d_basic():
+    return TestInterface(lambda x, y: (x>0.5) & (y>0.5))
+
+
+# ========================================================================
+# elementwise
+# or
+
+@add_module_test(torch.float32, torch.device('cuda'), [(4, ),     (1, 3, 4)],             alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4), (1, 3, 4)],             alphabet='e', dynamic_axes={0:[1,32], 1:[3,40], 2:[4,40]})
+def test_or_3d_basic():
+    return TestInterface(lambda x, y: (x>0.5) | (y>0.5))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (4, 5,     )],       alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],       alphabet='e', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_or_4d_basic():
+    return TestInterface(lambda x, y: (x>0.5) | (y>0.5))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5, 6), (1, 3, 4, 5, 6)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5, 6), (1, 3, 4, 5, 6)], alphabet='e', dynamic_axes={0:[1,32], 3:[5,50], 4:[6, 60]})
+def test_or_5d_basic():
+    return TestInterface(lambda x, y: (x>0.5) | (y>0.5))
+
+
+# ========================================================================
+# elementwise
+# xor
+
+@add_module_test(torch.float32, torch.device('cuda'), [(4, ),     (1, 3, 4)],             alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4), (1, 3, 4)],             alphabet='e', dynamic_axes={0:[1,32], 1:[3,40], 2:[4,40]})
+def test_xor_3d_basic():
+    return TestInterface(lambda x, y: (x>0.5) ^ (y>0.5))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (4, 5,     )],       alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5), (1, 3, 4, 5)],       alphabet='e', dynamic_axes={0:[1,32], 2:[4,40], 3:[5,50]})
+def test_xor_4d_basic():
+    return TestInterface(lambda x, y: (x>0.5) ^ (y>0.5))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5, 6), (1, 3, 4, 5, 6)], alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 5, 6), (1, 3, 4, 5, 6)], alphabet='e', dynamic_axes={0:[1,32], 3:[5,50], 4:[6, 60]})
+def test_xor_5d_basic():
+    return TestInterface(lambda x, y: (x>0.5) ^ (y>0.5))
+
+
+# ========================================================================
+# elementwise
+# greater
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
+def test_gt_tensor():
+    return TestInterface(lambda x, y: x>y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
+def test_gt_float():
+    return TestInterface(lambda x: x>0.1)
+
+
+# ========================================================================
+# elementwise
+# less
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
+def test_lt_tensor():
+    return TestInterface(lambda x, y: x<y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
+def test_lt_float():
+    return TestInterface(lambda x: x<0.1)
+
+
+# ========================================================================
+# elementwise
+# equal
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
+def test_eq_tensor():
+    return TestInterface(lambda x, y: x==y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
+def test_eq_float():
+    return TestInterface(lambda x: x==0.1)
+
 
 
 # ========================================================================
@@ -1463,65 +1676,6 @@ def test_min_elementwise():
 
 
 # ========================================================================
-# mul
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_mul_basic():
-    return TestInterface(lambda x, y: x*y)
-
-class IMul(torch.nn.Module):
-    def __init__(self):
-        super(IMul, self).__init__()
-
-    def forward(self, x, y):
-        x *= y
-        return x
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_mul_imul():
-    return IMul()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='m')
-def test_mul_torchmul():
-    return TestInterface(lambda x, y: torch.mul(x, y))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='m')
-def test_rmul_int():
-    return TestInterface(lambda x: 10*x)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='m')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 244, 244)],                   alphabet='m', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_rmul_float():
-    return TestInterface(lambda x: 10.0*x)
-
-class MulConstantNoBatch(torch.nn.Module):
-    def __init__(self):
-        super(MulConstantNoBatch, self).__init__()
-        self.register_buffer('y', torch.ones((3, 10, 10)))
-
-    def forward(self, x):
-        return x * self.y
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='m')
-def test_mul_constant_nobatch():
-    return MulConstantNoBatch()
-
-class MulConstantBatch(torch.nn.Module):
-    def __init__(self):
-        super(MulConstantBatch, self).__init__()
-        self.register_buffer('y', torch.ones((1, 3, 10, 10)))
-
-    def forward(self, x):
-        return x * self.y
-    
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='m')
-def test_mul_constant_batch():
-    return MulConstantBatch()
-
-
-# ========================================================================
 # narrow
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1,3,224,224)], alphabet='n')
@@ -1779,65 +1933,6 @@ def test_stack_dim3():
 
 
 # ========================================================================
-# sub
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_sub_basic():
-    return TestInterface(lambda x, y: x-y)
-
-class ISub(torch.nn.Module):
-    def __init__(self):
-        super(ISub, self).__init__()
-
-    def forward(self, x, y):
-        x -= y
-        return x
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_sub_isub():
-    return ISub()
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)], alphabet='s')
-def test_torch_sub():
-    return TestInterface(lambda x, y: torch.sub(x, y))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='s')
-def test_rsub_int():
-    return TestInterface(lambda x: 1-x)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='s')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)],                   alphabet='s', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_rsub_float():
-    return TestInterface(lambda x: 1.0-x)
-
-class SubConstantNoBatch(torch.nn.Module):
-    def __init__(self):
-        super(SubConstantNoBatch, self).__init__()
-        self.register_buffer('y', torch.ones((3, 10, 10)))
-
-    def forward(self, x):
-        return x - self.y
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='s')
-def test_sub_constant_nobatch():
-    return SubConstantNoBatch()
-
-class SubConstantBatch(torch.nn.Module):
-    def __init__(self):
-        super(SubConstantBatch, self).__init__()
-        self.register_buffer('y', torch.ones((1, 3, 10, 10)))
-
-    def forward(self, x):
-        return x - self.y
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='s')
-def test_sub_constant_batch():
-    return SubConstantBatch()
-
-
-# ========================================================================
 # sum
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)],    alphabet='s')
@@ -1922,42 +2017,6 @@ def test_tensor_transpose_23():
 
 # ========================================================================
 # unary
-# exp
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_exp():
-    return TestInterface(lambda x: torch.exp(x))
-
-
-# ========================================================================
-# unary
-# log
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_log():
-    return TestInterface(lambda x: torch.log(x))
-
-
-# ========================================================================
-# unary
-# sqrt
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_sqrt():
-    return TestInterface(lambda x: torch.sqrt(x))
-
-
-# ========================================================================
-# unary
-# reciprocal
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_reciprocal():
-    return TestInterface(lambda x: torch.reciprocal(x))
-
-
-# ========================================================================
-# unary
 # abs
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
@@ -1967,56 +2026,11 @@ def test_abs():
 
 # ========================================================================
 # unary
-# neg
+# acos
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_neg():
-    return TestInterface(lambda x: torch.neg(x))
-
-
-# ========================================================================
-# unary
-# sin
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_sin():
-    return TestInterface(lambda x: torch.sin(x))
-
-
-# ========================================================================
-# unary
-# cos
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_cos():
-    return TestInterface(lambda x: torch.cos(x))
-
-
-# ========================================================================
-# unary
-# tan
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_tan():
-    return TestInterface(lambda x: torch.tan(x))
-
-
-# ========================================================================
-# unary
-# sinh
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_sinh():
-    return TestInterface(lambda x: torch.sinh(x))
-
-
-# ========================================================================
-# unary
-# cosh
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_cosh():
-    return TestInterface(lambda x: torch.cosh(x))
+def test_acos():
+    return TestInterface(lambda x: torch.acos(x))
 
 
 # ========================================================================
@@ -2026,15 +2040,6 @@ def test_cosh():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
 def test_asin():
     return TestInterface(lambda x: torch.asin(x))
-
-
-# ========================================================================
-# unary
-# acos
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
-def test_acos():
-    return TestInterface(lambda x: torch.acos(x))
 
 
 # ========================================================================
@@ -2057,11 +2062,110 @@ def test_ceil():
 
 # ========================================================================
 # unary
+# cos
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_cos():
+    return TestInterface(lambda x: torch.cos(x))
+
+
+# ========================================================================
+# unary
+# cosh
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_cosh():
+    return TestInterface(lambda x: torch.cosh(x))
+
+
+# ========================================================================
+# unary
+# exp
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_exp():
+    return TestInterface(lambda x: torch.exp(x))
+
+
+# ========================================================================
+# unary
 # floor
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
 def test_floor():
     return TestInterface(lambda x: torch.floor(x))
+
+
+# ========================================================================
+# unary
+# log
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_log():
+    return TestInterface(lambda x: torch.log(x))
+
+
+# ========================================================================
+# unary
+# neg
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_neg():
+    return TestInterface(lambda x: torch.neg(x))
+
+
+# ========================================================================
+# unary
+# not
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_not():
+    return TestInterface(lambda x: ~(x>0.5))
+
+
+# ========================================================================
+# unary
+# reciprocal
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_reciprocal():
+    return TestInterface(lambda x: torch.reciprocal(x))
+
+
+# ========================================================================
+# unary
+# sin
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_sin():
+    return TestInterface(lambda x: torch.sin(x))
+
+
+# ========================================================================
+# unary
+# sinh
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_sinh():
+    return TestInterface(lambda x: torch.sinh(x))
+
+
+# ========================================================================
+# unary
+# sqrt
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_sqrt():
+    return TestInterface(lambda x: torch.sqrt(x))
+
+
+# ========================================================================
+# unary
+# tan
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='u')
+def test_tan():
+    return TestInterface(lambda x: torch.tan(x))
 
 
 # ========================================================================

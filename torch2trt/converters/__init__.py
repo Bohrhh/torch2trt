@@ -11,10 +11,10 @@ from .argmax import *
 from .argmin import *
 from .avg_pool import *
 from .batch_norm import *
+from .cast import *
 from .cat import *
 from .chunk import *
 from .clamp import *
-from .compare import *
 from .conv import *
 from .conv_transpose import *
 from .correlation import *
