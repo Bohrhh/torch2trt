@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "common.h"
 #include "groupNormalizationPlugin.h"
 
 namespace nvinfer1

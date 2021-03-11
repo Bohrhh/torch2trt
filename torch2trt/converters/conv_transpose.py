@@ -17,7 +17,7 @@ def convert_ConvTranspose2d_trt7(ctx):
     output      = ctx.method_return
 
     assert module.padding_mode == 'zeros'
-    assert module.output_padding == 0
+    assert all([i == 0 for i in module.output_padding])
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]

@@ -118,7 +118,7 @@ def convert_neg(ctx):
 
 # NOT : not
 @tensorrt_converter('torch.Tensor.__invert__')
-def convert_floor(ctx):
+def convert_not(ctx):
     __convert_unary(ctx, trt.UnaryOperation.NOT)
 
 

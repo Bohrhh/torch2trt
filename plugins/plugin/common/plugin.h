@@ -22,15 +22,6 @@
 #include <string>
 #include "NvInferPlugin.h"
 
-// Enumerator for status
-typedef enum
-{
-    STATUS_SUCCESS = 0,
-    STATUS_FAILURE = 1,
-    STATUS_BAD_PARAM = 2,
-    STATUS_NOT_SUPPORTED = 3,
-    STATUS_NOT_INITIALIZED = 4
-} pluginStatus_t;
 
 namespace nvinfer1
 {
@@ -83,29 +74,6 @@ T read(const char*& buffer)
 
 } // namespace plugin
 } // namespace nvinfer1
-
-#define CUDACHECK(status_)                                                                                             \
-    {                                                                                                                  \
-        auto s_ = status_;                                                                                             \
-        if (s_ != cudaSuccess)                                                                                         \
-        {                                                                                                              \
-            std::cerr << __FILE__ << ", " << __LINE__ << ", " << s_ << ", " << cudaGetErrorString(s_) << std::endl;    \
-            abort();                                                                                                   \
-        }                                                                                                              \
-    }
-
-#define ASSERT(assertion)                                                                                              \
-    {                                                                                                                  \
-        if (!(assertion))                                                                                              \
-        {                                                                                                              \
-            std::cerr << "#assertion" << __FILE__ << "," << __LINE__ << std::endl;                                     \
-            abort();                                                                                                   \
-        }                                                                                                              \
-    }
-    
-#define CUDA_KERNEL_LOOP(i, n)                                 \
-  for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); \
-       i += blockDim.x * gridDim.x)
 
 
 #endif // TRT_PLUGIN_H

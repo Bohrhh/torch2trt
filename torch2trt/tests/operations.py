@@ -380,10 +380,25 @@ def test_cast_fp16():
 def test_cast_int32():
     return TestInterface(lambda x: (x*10).to(torch.int32))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', fp16_mode=True)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', dynamic_axes={0:[1,32], 1:[1, 40]}, fp16_mode=True)
+def test_cast_int32_tensor():
+    return TestInterface(lambda x: (x*10).to(torch.tensor([1,2,3], dtype=torch.int32, device='cuda')))
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', dynamic_axes={0:[1,32], 1:[1, 40]})
 def test_cast_int64():
     return TestInterface(lambda x: (x*10).to(torch.int64))
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', dynamic_axes={0:[1,32], 1:[1, 40]})
+def test_cast_long():
+    return TestInterface(lambda x: (x*10).long())
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4)], alphabet='c', dynamic_axes={0:[1,32], 1:[1, 40]})
+def test_cast_bool():
+    return TestInterface(lambda x: (x*10).bool())
 
 
 # ========================================================================
@@ -964,7 +979,7 @@ def test_div_constant_batch():
 
 # ========================================================================
 # elementwise
-# and
+# &
 
 @add_module_test(torch.float32, torch.device('cuda'), [(4, ),     (1, 3, 4)],             alphabet='e')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4), (1, 3, 4)],             alphabet='e', dynamic_axes={0:[1,32], 1:[3,40], 2:[4,40]})
@@ -984,7 +999,7 @@ def test_and_5d_basic():
 
 # ========================================================================
 # elementwise
-# or
+# |
 
 @add_module_test(torch.float32, torch.device('cuda'), [(4, ),     (1, 3, 4)],             alphabet='e')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4), (1, 3, 4)],             alphabet='e', dynamic_axes={0:[1,32], 1:[3,40], 2:[4,40]})
@@ -1004,7 +1019,7 @@ def test_or_5d_basic():
 
 # ========================================================================
 # elementwise
-# xor
+# ^
 
 @add_module_test(torch.float32, torch.device('cuda'), [(4, ),     (1, 3, 4)],             alphabet='e')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4), (1, 3, 4)],             alphabet='e', dynamic_axes={0:[1,32], 1:[3,40], 2:[4,40]})
@@ -1024,43 +1039,69 @@ def test_xor_5d_basic():
 
 # ========================================================================
 # elementwise
-# greater
+# >
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='e', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
 def test_gt_tensor():
     return TestInterface(lambda x, y: x>y)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='e')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='e', dynamic_axes={0:[1,32], 2:[6,60], 3:[6,60]})
 def test_gt_float():
     return TestInterface(lambda x: x>0.1)
 
 
 # ========================================================================
 # elementwise
-# less
+# <
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='e')
 def test_lt_tensor():
     return TestInterface(lambda x, y: x<y)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='e')
 def test_lt_float():
     return TestInterface(lambda x: x<0.1)
 
 
 # ========================================================================
 # elementwise
-# equal
+# ==
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='e')
 def test_eq_tensor():
     return TestInterface(lambda x, y: x==y)
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='c')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='e')
 def test_eq_float():
     return TestInterface(lambda x: x==0.1)
+
+
+# ========================================================================
+# elementwise
+# <=
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='e')
+def test_le_tensor():
+    return TestInterface(lambda x, y: x<=y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='e')
+def test_le_float():
+    return TestInterface(lambda x: x<=0.1)
+
+
+# ========================================================================
+# elementwise
+# >=
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6), (1, 3, 6, 6)], enabled=trt_version() >= '7.0', alphabet='e')
+def test_ge_tensor():
+    return TestInterface(lambda x, y: x>=y)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 6, 6)],               enabled=trt_version() >= '7.0', alphabet='e')
+def test_ge_float():
+    return TestInterface(lambda x: x>=0.1)
 
 
 

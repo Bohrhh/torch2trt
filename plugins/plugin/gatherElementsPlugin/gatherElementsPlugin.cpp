@@ -5,6 +5,8 @@ Date: 20200422
 
 #include <cuda_runtime_api.h>
 #include <iostream>
+#include "common.h"
+#include "serialize.hpp"
 #include "gatherElementsPlugin.h"
 
 using namespace nvinfer1;
@@ -110,16 +112,12 @@ size_t GatherElements::getSerializationSize() const
 
 void GatherElements::serialize(void* buffer) const
 {
-    char *d = reinterpret_cast<char*>(buffer), *a = d;
-    write(d, mDim);
-    ASSERT(d == a + getSerializationSize());
+    serialize_value(&buffer, mDim);
 };
 
 GatherElements::GatherElements(const void* data, size_t length)
 {
-    const char *d = reinterpret_cast<const char*>(data), *a = d;
-    mDim = read<int>(d);
-    ASSERT(d == a + length);
+    deserialize_value(&data, &length, &mDim);
 };
 
 const char* GatherElements::getPluginType() const

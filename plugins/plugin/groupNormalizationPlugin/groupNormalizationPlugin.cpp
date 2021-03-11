@@ -16,6 +16,8 @@
 
 #include <numeric>
 #include <stdexcept>
+#include "common.h"
+#include "serialize.hpp"
 #include "groupNormalizationPlugin.h"
 
 using namespace nvinfer1;
@@ -159,19 +161,15 @@ size_t GroupNormalizationPlugin::getSerializationSize() const
 
 void GroupNormalizationPlugin::serialize(void* buffer) const
 {
-    char *d = reinterpret_cast<char*>(buffer), *a = d;
-    write(d, mEpsilon);
-    write(d, mNbGroups);
-    ASSERT(d == a + getSerializationSize());
+    serialize_value(&buffer, mEpsilon);
+    serialize_value(&buffer, mNbGroups);
 }
 
 GroupNormalizationPlugin::GroupNormalizationPlugin(const void* data, size_t length)
 {
     // Deserialize in the same order as serialization
-    const char *d = reinterpret_cast<const char*>(data), *a = d;
-    mEpsilon = read<float>(d);
-    mNbGroups = read<int>(d);
-    ASSERT(d == a + length);
+    deserialize_value(&data, &length, &mEpsilon);
+    deserialize_value(&data, &length, &mNbGroups);
 }
 
 bool GroupNormalizationPlugin::supportsFormatCombination(

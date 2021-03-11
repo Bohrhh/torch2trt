@@ -15,7 +15,10 @@
  */
 #include <cuda_runtime_api.h>
 #include <iostream>
+#include "common.h"
+#include "serialize.hpp"
 #include "correlationPlugin.h"
+
 
 using namespace nvinfer1;
 using namespace plugin;
@@ -147,22 +150,18 @@ size_t Correlation::getSerializationSize() const
 
 void Correlation::serialize(void* buffer) const
 {
-    char *d = reinterpret_cast<char*>(buffer), *a = d;
-    write(d, mMaxDisparity);
-    write(d, mStride);
-    write(d, mIsTime);
-    write(d, mIsMean);
-    ASSERT(d == a + getSerializationSize());
+    serialize_value(&buffer, mMaxDisparity);
+    serialize_value(&buffer, mStride);
+    serialize_value(&buffer, mIsTime);
+    serialize_value(&buffer, mIsMean);
 };
 
 Correlation::Correlation(const void* data, size_t length)
 {
-    const char *d = reinterpret_cast<const char*>(data), *a = d;
-    mMaxDisparity = read<int32_t>(d);
-    mStride = read<int32_t>(d);
-    mIsTime = read<bool>(d);
-    mIsMean = read<bool>(d);
-    ASSERT(d == a + length);
+    deserialize_value(&data, &length, &mMaxDisparity);
+    deserialize_value(&data, &length, &mStride);
+    deserialize_value(&data, &length, &mIsTime);
+    deserialize_value(&data, &length, &mIsMean);
 };
 
 const char* Correlation::getPluginType() const

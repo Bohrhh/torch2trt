@@ -1,5 +1,5 @@
 from torch2trt.utils import *
-
+from termcolor import colored
 
 def convert_elementwise(ctx, trt_op):
     # parse args
@@ -90,8 +90,16 @@ def convert_rdiv(ctx):
     convert_relementwise(ctx, trt.ElementWiseOperation.DIV)
 
 
+@tensorrt_converter('torch.floor_divide')
+@tensorrt_converter('torch.Tensor.__floordiv__')
+@tensorrt_converter('torch.Tensor.__ifloordiv__')
+def convert_floordiv(ctx):
+    print(colored('Warning convert_floordiv !!!: only positive result would give correct result', 'red'))
+    convert_elementwise(ctx, trt.ElementWiseOperation.FLOOR_DIV)
+
+
 # ============================================================
-# and
+# &
 
 @tensorrt_converter('torch.Tensor.__and__')
 def convert_and(ctx):
@@ -99,7 +107,7 @@ def convert_and(ctx):
 
 
 # ============================================================
-# or
+# |
 
 @tensorrt_converter('torch.Tensor.__or__')
 def convert_or(ctx):
@@ -107,15 +115,15 @@ def convert_or(ctx):
 
 
 # ============================================================
-# or
+# ^
 
-@tensorrt_converter('torch.Tensor.__or__')
+@tensorrt_converter('torch.Tensor.__xor__')
 def convert_xor(ctx):
     convert_elementwise(ctx, trt_op=trt.ElementWiseOperation.XOR)
 
 
 # ============================================================
-# greater
+# >
 
 @tensorrt_converter('torch.gt', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.Tensor.__gt__', enabled=trt_version() >= '7.0')
@@ -124,7 +132,7 @@ def convert_gt(ctx):
 
 
 # ============================================================
-# less
+# <
 
 @tensorrt_converter('torch.lt', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.Tensor.__lt__', enabled=trt_version() >= '7.0')
@@ -133,9 +141,53 @@ def convert_lt(ctx):
 
 
 # ============================================================
-# equal
+# ==
 
 @tensorrt_converter('torch.eq', enabled=trt_version() >= '7.0')
 @tensorrt_converter('torch.Tensor.__eq__', enabled=trt_version() >= '7.0')
 def convert_eq(ctx):
     return convert_elementwise(ctx, trt.ElementWiseOperation.EQUAL)
+
+
+# ============================================================
+# <=
+@tensorrt_converter('torch.le', enabled=trt_version() >= '7.0')
+@tensorrt_converter('torch.Tensor.__le__', enabled=trt_version() >= '7.0')
+def convert_le(ctx):
+    # parse args
+    input_a = ctx.method_args[0]
+    input_b = ctx.method_args[1]
+    output  = ctx.method_return
+
+    # get tensorrt input
+    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input_a, input_b])
+    input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], output.dim())
+
+    # add tensorrt layer
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.GREATER)
+    layer = ctx.network.add_unary(layer.get_output(0), trt.UnaryOperation.NOT)
+
+    # get tensorrt output
+    output._trt = layer.get_output(0)
+
+
+# ============================================================
+# >=
+@tensorrt_converter('torch.ge', enabled=trt_version() >= '7.0')
+@tensorrt_converter('torch.Tensor.__ge__', enabled=trt_version() >= '7.0')
+def convert_ge(ctx):
+    # parse args
+    input_a = ctx.method_args[0]
+    input_b = ctx.method_args[1]
+    output  = ctx.method_return
+
+    # get tensorrt input
+    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input_a, input_b])
+    input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], output.dim())
+
+    # add tensorrt layer
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.LESS)
+    layer = ctx.network.add_unary(layer.get_output(0), trt.UnaryOperation.NOT)
+
+    # get tensorrt output
+    output._trt = layer.get_output(0)

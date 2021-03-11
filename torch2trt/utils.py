@@ -14,7 +14,7 @@ def trt_version():
 
 
 def torch_dtype_to_trt(dtype):
-    if trt_version() >= '7.0' and dtype == torch.bool:
+    if dtype == torch.bool:
         return trt.bool
     elif dtype == torch.int8:
         return trt.int8
@@ -30,10 +30,17 @@ def torch_dtype_to_trt(dtype):
         raise TypeError("%s is not supported by tensorrt" % dtype)
 
 
+def torch_dtype_for_trt(dtype):
+    if dtype == torch.int64:
+        return torch.int32
+    else:
+        return dtype
+
+
 def torch_dtype_from_trt(dtype):
     if dtype == trt.int8:
         return torch.int8
-    elif trt_version() >= '7.0' and dtype == trt.bool:
+    elif dtype == trt.bool:
         return torch.bool
     elif dtype == trt.int32:
         return torch.int32
@@ -140,11 +147,11 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
     """Creates missing TensorRT tensors as constants and attaches them to the Torch Tensors"""
     trt_tensors = [None] * len(tensors)
 
-    tensor_dtype = check_torch_dtype(*tensors)
-    dtype = tensor_dtype if dtype is None else dtype
+    torch_dtype = check_torch_dtype(*tensors)
+    dtype = torch_dtype if dtype is None else dtype
     assert dtype is not None, "No implicit dtype"
-    assert (tensor_dtype is None) or (tensor_dtype==dtype), \
-        "Tensors data types must match, but now tensors dtype:{} and dtype:{}".format(tensor_dtype, dtype)
+    assert (torch_dtype is None) or (torch_dtype==dtype), \
+        "Tensors data types must match, but now tensors dtype:{} and dtype:{}".format(torch_dtype, dtype)
 
     for i, t in enumerate(tensors):
         trt_tensor = None
@@ -155,7 +162,7 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
         # or... add constant for scalar primitive
         if isinstance(t, (float, int)):
             shape = (1,)
-            scalar = torch.tensor([t], dtype=dtype)
+            scalar = torch.tensor([t], dtype=torch_dtype_for_trt(dtype))
             scalar = scalar.detach().cpu().numpy()
             trt_tensor = network.add_constant(shape, scalar).get_output(0)
         elif hasattr(t, "_trt"):
@@ -163,10 +170,10 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
 
         # or... add constant for leaf tensor w/o _trt
         else:
+            t = t.to(torch_dtype_for_trt(t.dtype))
             weight = t.detach().cpu().numpy()
-            if weight.dtype==np.int64:
-                weight = weight.astype(np.int32)
-            t._trt = network.add_constant(weight.shape, weight).get_output(0)
+            shape = weight.shape if t.dim()>0 else (1,)
+            t._trt = network.add_constant(shape, weight).get_output(0)
             trt_tensor = t._trt
 
         assert trt_tensor is not None

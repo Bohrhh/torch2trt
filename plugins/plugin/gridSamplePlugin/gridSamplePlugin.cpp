@@ -5,6 +5,8 @@ Date: 20200828
 
 #include <cuda_runtime_api.h>
 #include <iostream>
+#include "common.h"
+#include "serialize.hpp"
 #include "gridSamplePlugin.h"
 
 using namespace nvinfer1;
@@ -134,20 +136,16 @@ size_t GridSample::getSerializationSize() const
 
 void GridSample::serialize(void* buffer) const
 {
-    char *d = reinterpret_cast<char*>(buffer), *a = d;
-    write(d, mMode);
-    write(d, mPadding_mode);
-    write(d, mAlign_corners);
-    ASSERT(d == a + getSerializationSize());
+    serialize_value(&buffer, mMode);
+    serialize_value(&buffer, mPadding_mode);
+    serialize_value(&buffer, mAlign_corners);
 };
 
 GridSample::GridSample(const void* data, size_t length)
 {
-    const char *d = reinterpret_cast<const char*>(data), *a = d;
-    mMode = read<int>(d);
-    mPadding_mode = read<int>(d);
-    mAlign_corners = read<bool>(d);
-    ASSERT(d == a + length);
+    deserialize_value(&data, &length, &mMode);
+    deserialize_value(&data, &length, &mPadding_mode);
+    deserialize_value(&data, &length, &mAlign_corners);
 };
 
 const char* GridSample::getPluginType() const

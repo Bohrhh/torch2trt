@@ -7,6 +7,7 @@ Date: 20200422
 #include <cassert>
 #include <iostream>
 #include <NvInferRuntimeCommon.h>
+#include "common.h"
 #include "gatherElementsKernels.h"
 
 namespace nvinfer1
@@ -67,9 +68,7 @@ cudaError_t gatherElements(
     const int nbDims,
     const int totalElements)
 {   
-    int block = 32*32;
-    int grid = ((int)totalElements + block-1)/block;
-    gatherElements_kernel<int, float><<<grid,block,0,stream>>>(    
+    gatherElements_kernel<int, float><<<GET_BLOCKS(totalElements),CUDA_NUM_THREADS,0,stream>>>(    
         input, output, index,
         inputSizes, indexSizes,
         dim, nbDims, totalElements);

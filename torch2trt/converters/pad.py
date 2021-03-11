@@ -11,7 +11,7 @@ def convert_pad(ctx):
     value  = get_arg(ctx, 'value', pos=3, default=0         )
     output = ctx.method_return
     assert input.dim()==4, 'At least 4 dimensions are required for input'
-    assert mode=='constant' and value==0, 'mode / value are ignored since not supported by TensorRT'
+    assert mode=='constant' and value==0, 'mode:{} / value:{} are ignored since not supported by TensorRT'.format(mode, value)
     assert len(pad)<=4, 'Only 2D padding is currently supported.'
     if len(pad)==2:
         pad = pad+(0,0)

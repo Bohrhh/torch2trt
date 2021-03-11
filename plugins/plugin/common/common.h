@@ -4,12 +4,33 @@
 #include "NvInfer.h"
 #include "NvInferPlugin.h"
 
+const int CUDA_NUM_THREADS = 1024;
+const int kMaxGridNum = 65535;
+
+#define CUDACHECK(status_)                                                                                             \
+    {                                                                                                                  \
+        auto s_ = status_;                                                                                             \
+        if (s_ != cudaSuccess)                                                                                         \
+        {                                                                                                              \
+            std::cerr << __FILE__ << ", " << __LINE__ << ", " << s_ << ", " << cudaGetErrorString(s_) << std::endl;    \
+            abort();                                                                                                   \
+        }                                                                                                              \
+    }
+
+#define ASSERT(assertion)                                                                                              \
+    {                                                                                                                  \
+        if (!(assertion))                                                                                              \
+        {                                                                                                              \
+            std::cerr << "#assertion" << __FILE__ << "," << __LINE__ << std::endl;                                     \
+            abort();                                                                                                   \
+        }                                                                                                              \
+    }
+    
 #define CUDA_KERNEL_LOOP(i, n)                                 \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); \
        i += blockDim.x * gridDim.x)
 
-const int CUDA_NUM_THREADS = 1024;
-const int kMaxGridNum = 65535;
+
 inline int GET_BLOCKS(const int N)
 {
   return std::min(kMaxGridNum, (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS);

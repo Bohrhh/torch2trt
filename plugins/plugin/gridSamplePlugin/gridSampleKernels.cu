@@ -5,6 +5,7 @@ Date: 20200828
 
 #include <vector>
 #include <iostream>
+#include "common.h"
 #include "gridSampleKernels.h"
 
 namespace nvinfer1
@@ -360,7 +361,7 @@ cudaError_t grid_sampler_2d_cuda(
     int count = batch * grid_H * grid_W;
 
     grid_sampler_2d_kernel<float>
-        <<<(count + 1024 - 1) / 1024, 1024, 0, stream>>>(
+        <<<GET_BLOCKS(count), CUDA_NUM_THREADS, 0, stream>>>(
             count,
             input,
             grid,
@@ -396,7 +397,7 @@ cudaError_t grid_sampler_3d_cuda(
 {
     int count = batch * grid_D * grid_H * grid_W;
     grid_sampler_3d_kernel<float>
-        <<<(count + 512 - 1) / 512, 512, 0, stream>>>(
+        <<<(count+512-1)/512, 512, 0, stream>>>(
             count,
             input,
             grid,
