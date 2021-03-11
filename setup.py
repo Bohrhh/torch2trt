@@ -21,5 +21,6 @@ setup(
     ext_package='torch2trt',
     ext_modules=ext_modules,
     data_files=data_files,
-    cmdclass={'build_ext': BuildExtension}
+    cmdclass={'build_ext': BuildExtension},
+    zip_safe=False
 )
