@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <stdexcept>
 #include "NvInfer.h"
 #include "NvInferPlugin.h"

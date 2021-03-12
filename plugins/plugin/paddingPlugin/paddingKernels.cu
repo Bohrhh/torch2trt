@@ -7,6 +7,7 @@ Reference: pytorch
 
 #include <vector>
 #include <thrust/pair.h>
+#include "common.h"
 #include "paddingKernels.h"
 
 namespace nvinfer1
@@ -77,7 +78,7 @@ inline thrust::pair<int32_t, int32_t>  get_index_mapping2d(
 
 template<typename scalar_t>
 __global__ void reflection_pad1d_out_kernel(
-    scalar_t * input, scalar_t * output,
+    const scalar_t * input, scalar_t * output,
     int32_t input_w,
     int32_t pad_l, int32_t pad_r) {
   auto output_x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -91,7 +92,7 @@ __global__ void reflection_pad1d_out_kernel(
 
 template<typename scalar_t>
 __global__ void reflection_pad2d_out_kernel(
-    scalar_t * input, scalar_t * output,
+    const scalar_t * input, scalar_t * output,
     int32_t input_dim_x, int32_t input_dim_y,
     int pad_t, int pad_b, int pad_l, int pad_r) {
   auto output_xy = threadIdx.x + blockIdx.x * blockDim.x;
@@ -120,9 +121,7 @@ cudaError_t padding_cuda(
 
 {   
     int nbatch = dims.d[0];
-    int dim_plane = 1;
-    int dim_w = 2;
-
+    int nplane = dims.d[1];
 
     ASSERT(dims.nbDims<=2 && "Reflect padding is only implemented for padding the last 2 \
         dimensions of 4D input tensor, or the last dimension of 3D input tensor.");
@@ -153,7 +152,7 @@ cudaError_t padding_cuda(
         dim3 block_size(output_plane_size > 256 ? 256 : output_plane_size);
         dim3 grid_size((int) std::ceil(output_plane_size/256.0), nplane, nbatch);
 
-        reflection_pad2d_out_kernel<<<grid_size, block_size, 0, at::cuda::getCurrentCUDAStream()>>>(
+        reflection_pad2d_out_kernel<<<grid_size, block_size, 0, stream>>>(
             input, output, input_w, input_h, pad_t, pad_b, pad_l, pad_r);
     }
 
