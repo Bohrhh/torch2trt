@@ -4,13 +4,13 @@ import runpy
 import argparse
 import traceback
 import numpy as np
-from termcolor import colored
-from torch2trt.utils import to_tuple
 from torch2trt import torch2trt
+from torch2trt.utils import to_tuple, get_root_logger
 from .operations import *
 from .models import *
 from .utils import *
 
+logger = get_root_logger()
 
 def run(self):
     # create module
@@ -134,14 +134,14 @@ if __name__ == '__main__':
             line = '| %s | %s | %s | %s | %.2E | %.3g | %.3g | %.3g | %.3g |' % (name, test.dtype.__repr__().split('.')[-1], str(test.input_shapes), str(test.torch2trt_kwargs), max_error, fps, fps_trt, ms, ms_trt)
         
             if args.tolerance >= 0 and max_error > args.tolerance:
-                print(colored(line, 'yellow'))
+                logger.warning(line)
                 num_tolerance += 1
             else:
                 print(line)
             num_success += 1
         except:
             line = '| %s | %s | %s | %s | N/A | N/A | N/A | N/A | N/A |' % (name, test.dtype.__repr__().split('.')[-1], str(test.input_shapes), str(test.torch2trt_kwargs))
-            print(colored(line, 'red'))
+            logger.error(line)
             num_error += 1
             tb = traceback.format_exc()
             print(tb)

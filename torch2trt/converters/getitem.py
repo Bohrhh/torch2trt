@@ -3,8 +3,8 @@ from torch2trt.utils import *
 
 def slice_to_trt(dim_size, dim_slice):
     
-    start = 0 if dim_slice.start is None else dim_slice.start
-    stop = dim_size if dim_slice.stop is None else dim_slice.stop
+    start = 0 if dim_slice.start is None else convert_dim(dim_slice.start, dim_size)
+    stop = dim_size if dim_slice.stop is None else convert_dim(dim_slice.stop, dim_size)
     stride = 1 if dim_slice.step is None else dim_slice.step
     
     size = (stop - start - 1) // stride + 1
@@ -38,7 +38,6 @@ def convert_getitem_slice(ctx):
     
     new_slices = []
     for s in slices:
-        
         if s == Ellipsis:
             while num_ellipsis > 0:
                 new_slices.append(slice(None, None, None))
@@ -77,7 +76,7 @@ def convert_getitem_slice(ctx):
             input_dim += 1
             
         elif isinstance(s, int):
-            starts.append(s)
+            starts.append(convert_dim(s, input.shape[input_dim]))
             sizes.append(1)
             strides.append(1)
             input_dim += 1

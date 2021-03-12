@@ -976,6 +976,9 @@ class DivConstantBatch(torch.nn.Module):
 def test_div_constant_batch():
     return DivConstantBatch()
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_div_floor():
+    return TestInterface(lambda x: (x*10).abs()//3)
 
 # ========================================================================
 # elementwise
@@ -1186,6 +1189,14 @@ def test_gather5d_dim3():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
 def test_tensor_getitem_1d_int():
     return TestInterface(lambda x: x[:, 0])
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
+def test_tensor_getitem_1d_int_neg():
+    return TestInterface(lambda x: x[:,-1])
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
+def test_tensor_getitem_1d_neg():
+    return TestInterface(lambda x: x[:,:-1])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
 def test_tensor_getitem_1slice():

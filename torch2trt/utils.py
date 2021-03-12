@@ -1,11 +1,15 @@
 import copy
 import torch
+import logging
+import colorlog
 import importlib
 import numpy as np
 import tensorrt as trt
 
+
 # GLOBAL VARIABLE
 CONVERTERS = {}
+LOGGERS = []
 
 # UTILITY FUNCTIONS
 
@@ -417,3 +421,30 @@ def squeeze(ctx, input_trt, dim):
     layer = ctx.network.add_shuffle(input_trt)
     layer.set_input(1, new_shape_trt)
     return layer.get_output(0)
+
+
+def get_root_logger():
+
+    if 'torch2trt' in LOGGERS:
+        logger = logging.getLogger('torch2trt')
+    else:
+        LOGGERS.append('torch2trt')
+        logger = logging.getLogger('torch2trt')
+        logger.setLevel(logging.DEBUG)
+
+        log_colors_config = {
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'red',
+        }
+
+        formatter = colorlog.ColoredFormatter(
+            '%(log_color)s[%(module)s:%(funcName)s] [%(levelname)s]- %(message)s',
+            log_colors=log_colors_config)
+        ch = colorlog.StreamHandler()
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+        
+    return logger

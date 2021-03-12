@@ -6,7 +6,7 @@ then
     mkdir build && cd build
     cmake .. && make -j$(nproc) install
     cd ../../
-    cd torch2trt/opts/dcn
+    cd torch2trt/ops/dcn
     ./build.sh
     cd ../../../
     python setup.py install --plugins

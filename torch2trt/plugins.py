@@ -1,8 +1,16 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch2trt.opts.dcn import ModulatedDeformConvFunction
-from torch2trt.opts.dcn import ModulatedDeformConvPack
+
+from torch2trt.utils import get_root_logger
+logger = get_root_logger()
+
+try:
+    from torch2trt.ops.dcn import ModulatedDeformConvFunction
+    from torch2trt.ops.dcn import ModulatedDeformConvPack
+except:
+    logger.warning('Can not import torch plugins dcn')
+
 
 class Correlation_TRT(nn.Module):
     def __init__(self, max_disp, stride=1, mode='time', reduction='mean'):

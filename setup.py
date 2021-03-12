@@ -8,9 +8,9 @@ ext_modules = []
 data_files = []
 
 if '--plugins' in sys.argv:
-    dcn_sos = [os.path.join('torch2trt/opts/dcn', f) for f in os.listdir('torch2trt/opts/dcn') if f.endswith(".so")]
+    dcn_sos = [os.path.join('torch2trt/ops/dcn', f) for f in os.listdir('torch2trt/ops/dcn') if f.endswith(".so")]
     sys.argv.remove('--plugins')
-    data_files = [('torch2trt/opts/dcn', dcn_sos)]
+    data_files = [('torch2trt/ops/dcn', dcn_sos)]
 
     
 setup(

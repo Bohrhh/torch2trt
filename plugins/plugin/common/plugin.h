@@ -55,22 +55,6 @@ protected:
     std::string mNamespace;
 };
 
-// Write values into buffer
-template <typename T>
-void write(char*& buffer, const T& val)
-{
-    *reinterpret_cast<T*>(buffer) = val;
-    buffer += sizeof(T);
-}
-
-// Read values from buffer
-template <typename T>
-T read(const char*& buffer)
-{
-    T val = *reinterpret_cast<const T*>(buffer);
-    buffer += sizeof(T);
-    return val;
-}
 
 } // namespace plugin
 } // namespace nvinfer1

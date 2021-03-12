@@ -35,6 +35,7 @@ set(PLUGIN_LISTS
     groupNormalizationPlugin
     gatherElementsPlugin
     deformableConvPlugin
+    paddingPlugin
 )
 
 # include_directories(common common/kernels)

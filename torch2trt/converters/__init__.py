@@ -18,7 +18,6 @@ from .clamp import *
 from .conv import *
 from .conv_transpose import *
 from .correlation import *
-from .deformable_conv_v2 import *
 from .elementwise import *
 from .expand import *
 from .gather import *
@@ -51,3 +50,12 @@ from .topk import *
 from .transpose import *
 from .unary import *
 from .view import *
+
+from torch2trt.utils import get_root_logger
+logger = get_root_logger()
+
+# torch plugins
+try:
+    from .deformable_conv_v2 import *
+except AttributeError:
+    pass

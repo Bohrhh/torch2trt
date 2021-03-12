@@ -21,5 +21,4 @@ torch2trt_test.md
 .vscode/
 .gitignore
 /examples/models
-/opts/
-/torch2trt/opts/
+/torch2trt/ops/

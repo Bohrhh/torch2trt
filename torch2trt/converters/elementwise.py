@@ -1,5 +1,5 @@
 from torch2trt.utils import *
-from termcolor import colored
+logger = get_root_logger()
 
 def convert_elementwise(ctx, trt_op):
     # parse args
@@ -94,7 +94,7 @@ def convert_rdiv(ctx):
 @tensorrt_converter('torch.Tensor.__floordiv__')
 @tensorrt_converter('torch.Tensor.__ifloordiv__')
 def convert_floordiv(ctx):
-    print(colored('Warning convert_floordiv !!!: only positive result would give correct result', 'red'))
+    logger.error('operation "//" only positive result would give correct result')
     convert_elementwise(ctx, trt.ElementWiseOperation.FLOOR_DIV)
 
 

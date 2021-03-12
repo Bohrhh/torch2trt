@@ -56,3 +56,15 @@ inline unsigned int getDataTypeSize(nvinfer1::DataType t) {
     return 0;
 }
 
+namespace nvinfer1
+{
+
+class Pads
+{
+public:
+    static const int MAX_DIMS = 16; //!< The maximum number of dimensions supported for a pads.
+    int nbPads;                     //!< The number of pads.
+    int d[MAX_DIMS];                //!< The extent of each dimension.
+};
+
+}
