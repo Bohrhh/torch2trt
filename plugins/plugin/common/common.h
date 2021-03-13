@@ -18,19 +18,21 @@ const int kMaxGridNum = 65535;
         }                                                                                                              \
     }
 
-#define ASSERT(assertion)                                                                                              \
-    {                                                                                                                  \
-        if (!(assertion))                                                                                              \
-        {                                                                                                              \
-            std::cerr << "#assertion" << __FILE__ << "," << __LINE__ << std::endl;                                     \
-            abort();                                                                                                   \
-        }                                                                                                              \
-    }
-    
 #define CUDA_KERNEL_LOOP(i, n)                                 \
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); \
        i += blockDim.x * gridDim.x)
 
+inline void ASSERT(bool condition, std::string desc="")
+{
+    do
+    {
+        if (!(condition))
+        {
+            std::cerr << "Assertion failed " << __FILE__ << "," << __LINE__ << ": " << desc << std::endl; 
+            exit(0);
+        }
+    } while (0);
+}
 
 inline int GET_BLOCKS(const int N)
 {

@@ -1781,9 +1781,14 @@ def test_pad_basic():
 def test_pad_last():
     return TestInterface(lambda x: F.pad(x, (1, 2)))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224)], alphabet='p')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224)], alphabet='p', dynamic_axes={0:[1,32], 2:[128,256]})
+def test_pad_reflect_3d():
+    return TestInterface(lambda x: F.pad(x, (1, 2,), mode='reflect'))
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p')
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p', dynamic_axes={0:[1,32], 2:[128,256], 3:[128,256]})
-def test_pad_reflect():
+def test_pad_reflect_4d():
     return TestInterface(lambda x: F.pad(x, (1, 2, 3, 4), mode='reflect'))
 
 

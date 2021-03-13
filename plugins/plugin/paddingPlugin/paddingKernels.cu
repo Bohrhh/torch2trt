@@ -123,9 +123,9 @@ cudaError_t padding_cuda(
     int nbatch = dims.d[0];
     int nplane = dims.d[1];
 
-    ASSERT(dims.nbDims<=2 && "Reflect padding is only implemented for padding the last 2 \
+    ASSERT(dims.nbDims<=4 && dims.nbDims>=3, "Reflect padding is only implemented for padding the last 2 \
         dimensions of 4D input tensor, or the last dimension of 3D input tensor.");
-    ASSERT(mode==PaddingMode::Reflect && "Padding plugin only support reflect padding.");
+    ASSERT(mode==PaddingMode::Reflect, "Padding plugin only support reflect padding.");
     
     if (dims.nbDims==3){
         int input_w = dims.d[2];
