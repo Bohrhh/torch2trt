@@ -12,7 +12,7 @@ def convert_stack(ctx):
     inputs_trt = add_missing_trt_tensors(ctx.network, inputs)
 
     # add tensorrt layer
-    dim        = convert_dim(dim, inputs[0].dim())
+    dim        = convert_dim(dim, inputs[0].dim()+1)
     inputs_trt = [unsqueeze(ctx, i, dim) for i in inputs_trt]
     layer      = ctx.network.add_concatenation(inputs=inputs_trt)
     layer.axis = dim

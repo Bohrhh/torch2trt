@@ -1993,6 +1993,10 @@ def test_stack_dim1():
 def test_stack_dim3():
     return TestInterface(lambda *x: torch.stack(x, dim=3))
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 4, 4), (1, 4, 4)], enabled=trt_version() >= '7.0', alphabet='s')
+def test_stack_dim_neg():
+    return TestInterface(lambda *x: torch.stack(x, dim=-1))
+
 
 # ========================================================================
 # sum
@@ -2299,3 +2303,4 @@ def test_unsqueeze():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 1, 3)],       alphabet='v', dynamic_axes={0:[1,32], 1:[3,30], 3:[3,30]})
 def test_squeeze():
     return TestInterface(lambda x: x.squeeze(dim=2))
+
