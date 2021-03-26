@@ -19,7 +19,7 @@ using nvinfer1::plugin::GridSamplePluginCreator;
 namespace
 {
 const char* GridSample_PLUGIN_VERSION{"1"};
-const char* GridSample_PLUGIN_NAME{"GridSamplePlugin"};
+const char* GridSample_PLUGIN_NAME{"GridSample_TRT"};
 } // namespace
 
 PluginFieldCollection GridSamplePluginCreator::mFC{};
@@ -29,9 +29,9 @@ REGISTER_TENSORRT_PLUGIN(GridSamplePluginCreator);
 
 GridSamplePluginCreator::GridSamplePluginCreator()
 {
-    mPluginAttributes.emplace_back(PluginField("mode", nullptr, PluginFieldType::kINT32, 0));
-    mPluginAttributes.emplace_back(PluginField("padding_mode", nullptr, PluginFieldType::kINT32, 0));
-    mPluginAttributes.emplace_back(PluginField("align_corners", nullptr, PluginFieldType::kINT32, 0));
+    mPluginAttributes.emplace_back(PluginField("mode", nullptr, PluginFieldType::kINT32, 1));
+    mPluginAttributes.emplace_back(PluginField("padding_mode", nullptr, PluginFieldType::kINT32, 1));
+    mPluginAttributes.emplace_back(PluginField("align_corners", nullptr, PluginFieldType::kINT32, 1));
 
     mFC.nbFields = mPluginAttributes.size();
     mFC.fields = mPluginAttributes.data();

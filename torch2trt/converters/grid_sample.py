@@ -15,7 +15,7 @@ def convert_grid_sample(ctx):
     output        = ctx.method_return
     # assert input.dim()==4, "Only support tensors with 4 dimensions."
 
-    mode = ['bilinear', 'nearest'].index(mode)
+    mode = ['nearest', 'bilinear'].index(mode)
     padding_mode = ['zeros', 'border', 'reflection'].index(padding_mode)
     align_corners = 1 if align_corners else 0
 
@@ -23,7 +23,7 @@ def convert_grid_sample(ctx):
     inputs_trt = add_missing_trt_tensors(ctx.network, [input, grid])
 
     # add tensorrt layer
-    creator = trt.get_plugin_registry().get_plugin_creator('GridSamplePlugin', '1')
+    creator = trt.get_plugin_registry().get_plugin_creator('GridSample_TRT', '1')
     assert creator is not None, 'Has no GridSamplePlugin version 1'
     fc = []
     fc.append(trt.PluginField(name='mode',          data=np.array([mode],           dtype=np.int32),   type=trt.PluginFieldType.INT32))

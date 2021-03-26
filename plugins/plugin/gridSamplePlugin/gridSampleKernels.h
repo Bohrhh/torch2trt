@@ -11,7 +11,7 @@ namespace nvinfer1
 namespace plugin
 {
 
-enum class GridSamplerInterpolation {Bilinear, Nearest};
+enum class GridSamplerInterpolation {Nearest, Bilinear};
 enum class GridSamplerPadding {Zeros, Border, Reflection};
 
 cudaError_t grid_sampler_2d_cuda(
