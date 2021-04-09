@@ -24,13 +24,13 @@ def convert_conv_function(ctx):
     
     # add tensorrt layer
     input_dim = input.dim() - 2
-    if not isinstance(kernel_size, tuple):
+    if not isinstance(kernel_size, (tuple, list)):
         kernel_size = (kernel_size, ) * input_dim
-    if not isinstance(stride, tuple):
+    if not isinstance(stride, (tuple, list)):
         stride      = (stride, ) * input_dim
-    if not isinstance(padding, tuple):
+    if not isinstance(padding, (tuple, list)):
         padding     = (padding, ) * input_dim
-    if not isinstance(dilation, tuple):
+    if not isinstance(dilation, (tuple, list)):
         dilation    = (dilation, ) * input_dim
 
     # if conv1d, reshape to 2D
