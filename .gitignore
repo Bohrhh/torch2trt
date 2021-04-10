@@ -4,7 +4,7 @@ build.ninja
 tags
 *.o
 *.pb.o
-torch2trt.egg-info
+*.egg-info
 build/
 dist/
 __pycache__/
@@ -21,4 +21,4 @@ torch2trt_test.md
 .vscode/
 .gitignore
 /examples/models
-/torch2trt/ops/
+
