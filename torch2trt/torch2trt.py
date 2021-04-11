@@ -168,10 +168,13 @@ class TRTModule(torch.nn.Module):
 
     def forward(self, *inputs):
         bindings = [None] * (len(self.input_names) + len(self.output_names))
+        inputs = list(inputs)
 
         for i, input_name in enumerate(self.input_names):
             idx = self.engine.get_binding_index(input_name)
-            bindings[idx] = inputs[i].contiguous().data_ptr()
+            if not inputs[i].is_contiguous():
+                inputs[i] = inputs[i].contiguous()
+            bindings[idx] = inputs[i].data_ptr()
             self.context.set_binding_shape(idx, tuple(inputs[i].shape))
 
         # create output tensors
