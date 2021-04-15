@@ -796,6 +796,10 @@ class AddConstantBatch(torch.nn.Module):
 def test_add_constant_batch():
     return AddConstantBatch()
 
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10, 10)],                     alphabet='e')
+def test_add_cast():
+    return TestInterface(lambda x: x.to(torch.int64)+0.1)
+
 
 # ========================================================================
 # elementwise
@@ -1187,56 +1191,70 @@ def test_gather5d_dim3():
 # getitem
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16]})
 def test_tensor_getitem_1d_int():
     return TestInterface(lambda x: x[:, 0])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16]})
 def test_tensor_getitem_1d_int_neg():
     return TestInterface(lambda x: x[:,-1])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16]})
 def test_tensor_getitem_1d_neg():
     return TestInterface(lambda x: x[:,:-1])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16]})
 def test_tensor_getitem_1slice():
     return TestInterface(lambda x: x[0])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_int():
     return TestInterface(lambda x: x[:, 0])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_strided():
     return TestInterface(lambda x: x[:, ::2])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_strided_offset():
     return TestInterface(lambda x: x[:, 1::2])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_strided_range():
     return TestInterface(lambda x: x[:, 1:3:2])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_insert_dim():
     return TestInterface(lambda x: x[:, None])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_insert_dim_ellipsis():
     return TestInterface(lambda x: x[:, None, ...])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_append_dim():
     return TestInterface(lambda x: x[:, ..., None])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_append_2dim():
     return TestInterface(lambda x: x[:, ..., None, None])
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g')
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 4, 3)], alphabet='g', dynamic_axes={0:[1, 16], 1:[1,16], 2:[1,16], 3:[1,16]})
 def test_tensor_getitem_2d_weird_combo():
     return TestInterface(lambda x: x[:, 0:3:4, None, None, 1, ...])
+
 
 
 # ========================================================================
@@ -1428,10 +1446,6 @@ def test_interpolate_size_3d():
 @add_module_test(torch.float32, torch.device('cuda'), [(1,4,3,5,1)],    enabled=trt_version() >= '7.1', alphabet='i')
 def test_interpolate_size_odd_input_3d():
     return torch.nn.Upsample(size=[11,14,17], mode="trilinear", align_corners=False)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,2,12,12)],    enabled=trt_version() >= '7.1', alphabet='i')
-def test_interpolate_haha():
-    return TestInterface(lambda x: 2 * F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True))
 
 
 # ========================================================================
@@ -2308,3 +2322,19 @@ def test_unsqueeze():
 def test_squeeze():
     return TestInterface(lambda x: x.squeeze(dim=2))
 
+
+# ========================================================================
+# z
+
+class Haha(nn.Module):
+    def __init__(self):
+        super(Haha, self).__init__()
+    def forward(self, x):
+        x = x.to(torch.int64)
+        x = x+0.1
+        return x
+
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 128, 40, 64)], alphabet='z', dynamic_axes={0:[1,16],3:[32,64]})
+def test_haha():
+    return Haha()

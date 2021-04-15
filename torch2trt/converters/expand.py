@@ -8,6 +8,9 @@ def convert_expand(ctx):
     sizes  = ctx.method_args[1:]
     output = ctx.method_return
 
+    if not has_trt(*ctx.method_args):
+        return 
+
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
     assert not ctx.is_dynamic, "Expand do not support dynamic shape"

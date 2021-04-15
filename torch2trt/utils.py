@@ -143,7 +143,7 @@ def check_torch_dtype(*tensors):
             if dtype is None:
                 dtype = t.dtype
             else:
-                assert dtype == t.dtype  # , 'Tensor data types must match')
+                assert dtype == t.dtype, 'Tensor data types must match, got {}, {}'.format(dtype, t.dtype)
     return dtype
 
     
@@ -152,10 +152,12 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
     trt_tensors = [None] * len(tensors)
 
     torch_dtype = check_torch_dtype(*tensors)
+    torch_dtype = torch.int32 if torch_dtype==torch.int64 else torch_dtype
     dtype = torch_dtype if dtype is None else dtype
     assert dtype is not None, "No implicit dtype"
     assert (torch_dtype is None) or (torch_dtype==dtype), \
         "Tensors data types must match, but now tensors dtype:{} and dtype:{}".format(torch_dtype, dtype)
+
 
     for i, t in enumerate(tensors):
         trt_tensor = None
@@ -293,12 +295,12 @@ def attach_converter(ctx, method, converter, method_str):
                     if isinstance(outputs, tuple):
                         outputs_new = []
                         for o in outputs:
-                            o = torch.tensor(o, device=args[0].device, dtype=torch.int32)
+                            o = torch.tensor(o, device=args[0].device, dtype=torch.int64)
                             o.is_shape_tensor = True
                             outputs_new.append(o)
                         outputs = tuple(outputs_new)
                     else:
-                        outputs = torch.tensor(outputs, device=args[0].device, dtype=torch.int32)
+                        outputs = torch.tensor(outputs, device=args[0].device, dtype=torch.int64)
                         outputs.is_shape_tensor = True
 
                 if has_shape_tensor(args) or has_shape_tensor(kwargs):
@@ -448,3 +450,10 @@ def get_root_logger():
         logger.addHandler(ch)
         
     return logger
+
+
+def has_trt(*args):
+    for a in args:
+        if hasattr(a, '_trt'):
+            return True
+    return False

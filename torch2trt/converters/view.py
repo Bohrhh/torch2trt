@@ -14,6 +14,9 @@ def convert_view(ctx):
         shape = tuple(ctx.method_args[1:])  # handle view(a,b,c,d)
     output = ctx.method_return
 
+    if not has_trt(input, *shape):
+        return 
+
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
     shape_trt = add_missing_trt_tensors(ctx.network, shape, dtype=torch.int32)
