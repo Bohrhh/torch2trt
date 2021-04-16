@@ -1,4 +1,3 @@
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 
@@ -14,7 +13,7 @@ def convert_narrow(ctx):
 
     # get tensorrt input
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    assert all([i!=-1 for i in input_trt.shape]), "Narrow does not support dynamic shape"
+    assert not ctx.is_dynamic, "Narrow does not support dynamic shape"
 
     # add tensorrt layer
     shape   = list(input.shape)
@@ -27,12 +26,3 @@ def convert_narrow(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,3,224,224)])
-def test_narrow1():
-    return TestInterface(lambda x: torch.narrow(x, 1, 0, 2))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,3,224,224)])
-def test_narrow2():
-    return TestInterface(lambda x: torch.narrow(x, 2, 2, 50))

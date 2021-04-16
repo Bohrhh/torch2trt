@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 import tensorrt as trt
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 
@@ -18,34 +17,19 @@ def convert_group_norm_trt(ctx):
 
     # get tensorrt input 
     inputs_trt = add_missing_trt_tensors(ctx.network, [input, weight, bias])
-    assert all([i!=-1 for i in inputs_trt[0].shape]), "GroupNorm does not support dynamic shape now"
+    assert not ctx.is_dynamic, "GroupNorm does not support dynamic shape now"
+    
 
     # add tensorrt layer
     creator = trt.get_plugin_registry().get_plugin_creator('GroupNormalizationPlugin', '1')
     assert creator is not None, 'Has no GroupNormalizationPlugin version 1'
-    fc = trt.PluginFieldCollection()
+    fc = []
     fc.append(trt.PluginField(name='eps',        data=np.array([eps],        dtype=np.float32), type=trt.PluginFieldType.FLOAT32))
     fc.append(trt.PluginField(name='num_groups', data=np.array([num_groups], dtype=np.int32  ), type=trt.PluginFieldType.INT32  ))
+    fc = trt.PluginFieldCollection(fc)
 
     plugin = creator.create_plugin('group_num', fc)
     layer  = ctx.network.add_plugin_v2(inputs_trt, plugin)
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_1d():
-    return torch.nn.GroupNorm(2, 10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_2d():
-    return torch.nn.GroupNorm(2, 10)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_eps_1d():
-    return torch.nn.GroupNorm(2, 10, eps=1e-4)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 112, 112)], enabled=trt_version() >= '7.1.3')
-def test_group_norm_g2_eps_2d():
-    return torch.nn.GroupNorm(2, 10, eps=1e-4)

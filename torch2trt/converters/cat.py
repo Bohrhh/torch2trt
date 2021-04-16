@@ -1,4 +1,3 @@
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 
@@ -10,21 +9,12 @@ def convert_cat(ctx):
     output = ctx.method_return
 
     # get tensorrt input
-    trt_inputs = add_missing_trt_tensors(ctx.network, inputs)
-    trt_inputs = broadcast_trt_tensors(ctx.network, trt_inputs, len(output.shape))
+    inputs_trt = add_missing_trt_tensors(ctx.network, inputs)
+    inputs_trt = broadcast_trt_tensors(ctx.network, inputs_trt, output.dim())
 
     # add tensorrt layer
-    layer = ctx.network.add_concatenation(inputs=trt_inputs)
+    layer = ctx.network.add_concatenation(inputs=inputs_trt)
     layer.axis = dim
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 3, 4), (1, 17, 4)])
-def test_cat_basic():
-    return TestInterface(lambda *x: torch.cat(x, dim=1))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 4), (1, 3, 4), (1, 17, 4)], dynamic_axes={0:[1,32], 1:[1, 40]})
-def test_cat_dynamic():
-    return TestInterface(lambda *x: torch.cat(x, dim=1))

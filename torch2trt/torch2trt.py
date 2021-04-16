@@ -1,53 +1,47 @@
-import copy
 import torch
-import importlib
 import tensorrt as trt
+from torch2trt import plugins
 from collections import defaultdict
 from .utils import *
+import time
 
 from .calibration import (
-    TensorBatchDataset,
     DatasetCalibrator,
     DEFAULT_CALIBRATION_ALGORITHM,
 )
 
 
-def tensorrt_converter(method, is_real=True, enabled=True, imports=[]):
-    
-    if isinstance(method, str):
-        module, module_name, qual_name = get_module_qualname(method)
-    else:
-        module, module_name, qual_name = importlib.import_module(method.__module__), method.__module__, method.__qualname__
-        
-    method_impl = eval('copy.deepcopy(module.%s)' % qual_name)
-    
-    def register_converter(converter):
-        CONVERTERS[method] = {
-            "converter": converter, 
-            "is_real": is_real, 
-            "module": module,
-            "module_name": module_name,
-            "qual_name": qual_name,
-            "method_str": module_name + '.' + qual_name,
-            "method_impl": method_impl
-        }
-        return converter
+def add_inputs(network, torch_inputs, names=None, dynamic_axes={}):
+    if names is None:
+        names = default_input_names(len(torch_inputs))
 
-    def pass_converter(converter):
-        return converter
+    for i, torch_input in enumerate(torch_inputs):
+        if not hasattr(torch_input, "_trt"):
+            trt_shape = list(torch_input.shape)
+            for d in dynamic_axes:
+                trt_shape[d] = -1
+            trt_tensor = network.add_input(
+                name=names[i],
+                shape=tuple(trt_shape),
+                dtype=torch_dtype_to_trt(torch_input.dtype),
+            )
+            trt_tensor.location = torch_device_to_trt(torch_input.device)
+            torch_input._trt = trt_tensor
 
-    if enabled:
-        return register_converter
-    else:
-        return pass_converter
 
-    return register_converter
-    
+def mark_outputs(network, torch_outputs, names=None):
+    if names is None:
+        names = default_output_names(len(torch_outputs))
+
+    for i, torch_output in enumerate(torch_outputs):
+        trt_tensor = torch_output._trt
+        trt_tensor.name = names[i]
+        trt_tensor.location = torch_device_to_trt(torch_output.device)
+        trt_tensor.dtype = torch_dtype_to_trt(torch_output.dtype)
+        network.mark_output(trt_tensor)
+
 
 # CONVERSION REGISTRY AND HOOKS
-
-CONVERTERS = {}
-
 
 class ConversionHook(object):
     """Attaches TensorRT converter to PyTorch method call"""
@@ -70,12 +64,6 @@ class ConversionHook(object):
 
     def __exit__(self, type, val, tb):
         self._set_method(self.converter['method_impl'])
-
-def default_input_names(num_inputs):
-    return ["input_%d" % i for i in range(num_inputs)]
-
-def default_output_names(num_outputs):
-    return ["output_%d" % i for i in range(num_outputs)]
 
 
 class LayerNamingNetworkWrapper(object):
@@ -111,55 +99,36 @@ class LayerNamingNetworkWrapper(object):
 
 
 class ConversionContext(object):
-    def __init__(self, network, converters=CONVERTERS):
+    def __init__(self, network, converters=CONVERTERS, is_dynamic=True):
         self.network = LayerNamingNetworkWrapper(self, network)
         self.lock = False
         self.method_args = None
         self.method_kwargs = None
         self.method_return = None
-        self.hooks = [
-            ConversionHook(self, key, converter)
-            for key, converter in converters.items()
-        ]
-
+        self.is_dynamic = is_dynamic
+        self.dynamic_specific = ['torch.Tensor.size']
+        self.torch_shape = torch.Tensor.shape
+        self.hooks = []
+        for k,c in converters.items():
+            if not is_dynamic and k in self.dynamic_specific:
+                c['is_real'] = False
+                c['converter'] = lambda x: None
+            elif k in self.dynamic_specific:
+                c['is_real'] = True
+                c['converter'] = c['converter_backup']
+            self.hooks.append(ConversionHook(self, k, c))
+            
     def __enter__(self):
         for hook in self.hooks:
             hook.__enter__()
+        if self.is_dynamic:
+            torch.Tensor.shape = property(torch.Tensor.size)
         return self
 
     def __exit__(self, type, val, tb):
         for hook in self.hooks:
             hook.__exit__(type, val, tb)
-
-    def add_inputs(self, torch_inputs, names=None, dynamic_axes={}):
-        if names is None:
-            names = default_input_names(len(torch_inputs))
-        self.input_names = names
-
-        for i, torch_input in enumerate(torch_inputs):
-            if not hasattr(torch_input, "_trt"):
-                trt_shape = list(torch_input.shape)
-                for d in dynamic_axes:
-                    trt_shape[d] = -1
-                trt_tensor = self.network.add_input(
-                    name=names[i],
-                    shape=tuple(trt_shape),
-                    dtype=torch_dtype_to_trt(torch_input.dtype),
-                )
-                trt_tensor.location = torch_device_to_trt(torch_input.device)
-                torch_input._trt = trt_tensor
-
-    def mark_outputs(self, torch_outputs, names=None):
-        if names is None:
-            names = default_output_names(len(torch_outputs))
-        self.output_names = names
-
-        for i, torch_output in enumerate(torch_outputs):
-            trt_tensor = torch_output._trt
-            trt_tensor.name = names[i]
-            trt_tensor.location = torch_device_to_trt(torch_output.device)
-            trt_tensor.dtype = torch_dtype_to_trt(torch_output.dtype)
-            self.network.mark_output(trt_tensor)
+        torch.Tensor.shape = self.torch_shape
 
 
 class TRTModule(torch.nn.Module):
@@ -194,17 +163,18 @@ class TRTModule(torch.nn.Module):
             self.context = self.engine.create_execution_context()
             self.context.active_optimization_profile = 0
             
-
         self.input_names = state_dict[prefix + "input_names"]
         self.output_names = state_dict[prefix + "output_names"]
 
     def forward(self, *inputs):
-        batch_size = inputs[0].shape[0]
         bindings = [None] * (len(self.input_names) + len(self.output_names))
+        inputs = list(inputs)
 
         for i, input_name in enumerate(self.input_names):
             idx = self.engine.get_binding_index(input_name)
-            bindings[idx] = inputs[i].contiguous().data_ptr()
+            if not inputs[i].is_contiguous():
+                inputs[i] = inputs[i].contiguous()
+            bindings[idx] = inputs[i].data_ptr()
             self.context.set_binding_shape(idx, tuple(inputs[i].shape))
 
         # create output tensors
@@ -221,7 +191,6 @@ class TRTModule(torch.nn.Module):
         self.context.execute_async_v2(
             bindings, torch.cuda.current_stream().cuda_stream
         )
-        torch.cuda.synchronize()
 
         outputs = tuple(outputs)
         if len(outputs) == 1:
@@ -233,6 +202,10 @@ class TRTModule(torch.nn.Module):
         if not self.context.profiler:
             self.context.profiler = trt.Profiler()
 
+    def export(self, filename='model.trt'):
+        with open(filename, 'wb') as f:
+            f.write(self.engine.serialize())
+
 
 def torch2trt(module, 
               inputs, 
@@ -240,11 +213,9 @@ def torch2trt(module,
               output_names=None, 
               dynamic_axes={},
               log_level=trt.Logger.ERROR, 
-              max_batch_size=32,
               fp16_mode=False, 
               max_workspace_size=1<<30, 
               strict_type_constraints=False, 
-              keep_network=True, 
               int8_mode=False, 
               int8_calib_dataset=None,
               int8_calib_algorithm=DEFAULT_CALIBRATION_ALGORITHM,
@@ -257,34 +228,32 @@ def torch2trt(module,
 
     # ==================================================================
     # prepare input and output
-    inputs_in = inputs
 
-    # copy inputs to avoid modifications to source data
-    inputs = [tensor.clone() for tensor in inputs]  # only run single entry
-
-    if isinstance(inputs, list):
-        inputs = tuple(inputs)
-    if not isinstance(inputs, tuple):
-        inputs = (inputs,)
+    inputs = to_tuple(inputs)
+    inputs = tuple([t.clone() for t in inputs])
 
     # run once to get num outputs
-    outputs = module(*inputs)
-    if isinstance(outputs, list):
-        outputs = tuple(outputs)
-    if not isinstance(outputs, tuple):
-        outputs = (outputs,)
+    with torch.no_grad():
+        outputs = module(*inputs)
+
+    outputs = to_tuple(outputs)
         
     if input_names is None:
         input_names = default_input_names(len(inputs))
     if output_names is None:
         output_names = default_output_names(len(outputs))
+    assert len(input_names)  == len(inputs),  "len(input_names) != len(inputs)"
+    assert len(output_names) == len(outputs), "len(output_names) != len(outputs)"
 
     # ==================================================================
-    # tensorrt
+    # tensorrt objects
     logger  = trt.Logger(log_level)
     builder = trt.Builder(logger)
     network = builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
     config  = builder.create_builder_config()
+
+    # ==================================================================
+    # set tensorrt configs
 
     # dynamic shape profile
     if len(dynamic_axes)>0:
@@ -299,40 +268,38 @@ def torch2trt(module,
             profile.set_shape(input_names[i], min_shape, opt_shape, max_shape) 
         config.add_optimization_profile(profile)
 
-    with ConversionContext(network) as ctx:
-
-        ctx.add_inputs(inputs, input_names, dynamic_axes=dynamic_axes)
-
-        outputs = module(*inputs)
-
-        if not isinstance(outputs, tuple) and not isinstance(outputs, list):
-            outputs = (outputs,)
-        ctx.mark_outputs(outputs, output_names)
-
     config.max_workspace_size = max_workspace_size
-    if builder.platform_has_fast_fp16 and fp16_mode:
+    if fp16_mode:
+        print("======= float16 mode is on")
         config.set_flag(trt.BuilderFlag.FP16)
-    builder.max_batch_size = max_batch_size
-    builder.strict_type_constraints = strict_type_constraints
+    if strict_type_constraints:
+        config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
+    # ==================================================================
+    # construct tensorrt network
+    add_inputs(network, inputs, input_names, dynamic_axes=dynamic_axes)
+
+    with ConversionContext(network, is_dynamic=len(dynamic_axes)>0) as ctx:
+        outputs = module(*inputs)
+        
+    outputs = to_tuple(outputs)
+    mark_outputs(network, outputs, output_names)
+
+    # ==================================================================
+    # int8 calibration
     if int8_mode:
+        if  int8_calib_dataset is not None:
+            print("======= int8 mode is on")
+            config.set_flag(trt.BuilderFlag.INT8)
+            config.int8_calibrator = DatasetCalibrator(
+                int8_calib_dataset, algorithm=int8_calib_algorithm
+            )
+        else:
+            print("======= int8 mode is off, since int8_calib_dataset is None")
 
-        # default to use input tensors for calibration
-        if int8_calib_dataset is None:
-            int8_calib_dataset = TensorBatchDataset(inputs_in)
-
-        builder.int8_mode = True
-
-        # @TODO(jwelsh):  Should we set batch_size=max_batch_size?  Need to investigate memory consumption
-        builder.int8_calibrator = DatasetCalibrator(
-            inputs, int8_calib_dataset, batch_size=int8_calib_batch_size, algorithm=int8_calib_algorithm
-        )
-
+    # ==================================================================
+    # construct tensorrt model
     engine = builder.build_engine(network, config)
-
     module_trt = TRTModule(engine, input_names, output_names)
-
-    if keep_network:
-        module_trt.network = network
 
     return module_trt

@@ -1,4 +1,3 @@
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 
@@ -20,30 +19,3 @@ def convert_softmax(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(4, 3, 3, 3)])
-def test_softmax_dim0():
-    return torch.nn.Softmax(0)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_softmax_dim1():
-    return torch.nn.Softmax(1)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_softmax_dim2():
-    return torch.nn.Softmax(2)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_softmax_dim_neg1():
-    return torch.nn.Softmax(-1)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_softmax_dim_neg2():
-    return torch.nn.Softmax(-2)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(4, 3, 3, 3)], dynamic_axes={0:[1,32], 2:[3,30], 3:[3,30]})
-def test_softmax_dim1_dynamic():
-    return torch.nn.Softmax(1)

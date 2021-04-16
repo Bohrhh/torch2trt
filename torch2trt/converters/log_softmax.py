@@ -1,5 +1,4 @@
 import torch.nn as nn
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 
@@ -25,39 +24,3 @@ def convert_log_softmax(ctx):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
-
-
-# dim==0 has some unknow error
-# @add_module_test(torch.float32, torch.device('cuda'), [(3, 4, 10)])
-# def test_logsoftmax_d0():
-#     return nn.LogSoftmax(dim=0)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)])
-def test_logsoftmax_d1():
-    return nn.LogSoftmax(dim=1)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)])
-def test_tensor_logsoftmax_d1():
-    return TestInterface(lambda x: x.log_softmax(dim=1))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)])
-def test_torch_logsoftmax_d1():
-    return TestInterface(lambda x: torch.log_softmax(x, dim=1))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 10)])
-def test_logsoftmax_d2():
-    return nn.LogSoftmax(dim=2)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 10)], dynamic_axes={0:[1,32], 1:[10,50]})
-def test_logsoftmax_d1_dynamic():
-    return nn.LogSoftmax(dim=1)
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 10)], dynamic_axes={0:[1,32], 1:[3,30], 2:[10,50]})
-def test_logsoftmax_d2_dynamic():
-    return nn.LogSoftmax(dim=2)

@@ -1,40 +1,18 @@
+import os
 import sys
 import torch
 from setuptools import setup, find_packages
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CppExtension
-
-def trt_inc_dir():
-    return "/usr/include/aarch64-linux-gnu"
-
-def trt_lib_dir():
-    return "/usr/lib/aarch64-linux-gnu"
+from torch.utils.cpp_extension import BuildExtension
 
 ext_modules = []
+data_files = []
 
-plugins_ext_module = CUDAExtension(
-        name='plugins', 
-        sources=[
-            'torch2trt/plugins/plugins.cpp'
-        ],
-        include_dirs=[
-            trt_inc_dir()
-        ],
-        library_dirs=[
-            trt_lib_dir()
-        ],
-        libraries=[
-            'nvinfer'
-        ],
-        extra_compile_args={
-            'cxx': ['-DUSE_DEPRECATED_INTLIST'] if torch.__version__ < "1.5" else [],
-            'nvcc': []
-        }
-    )
 if '--plugins' in sys.argv:
-    ext_modules.append(plugins_ext_module)
+    dcn_sos = [os.path.join('torch2trt/ops/dcn', f) for f in os.listdir('torch2trt/ops/dcn') if f.endswith(".so")]
     sys.argv.remove('--plugins')
-    
+    data_files = [('torch2trt/ops/dcn', dcn_sos)]
 
+    
 setup(
     name='torch2trt',
     version='0.1.0',
@@ -42,5 +20,7 @@ setup(
     packages=find_packages(),
     ext_package='torch2trt',
     ext_modules=ext_modules,
-    cmdclass={'build_ext': BuildExtension}
+    data_files=data_files,
+    cmdclass={'build_ext': BuildExtension},
+    zip_safe=False
 )

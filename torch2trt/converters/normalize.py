@@ -1,5 +1,4 @@
 import torch.nn as nn
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 
@@ -7,7 +6,7 @@ from torch2trt.utils import *
 def convert_normalize(ctx):
     # get args
     input  = get_arg(ctx, 'input', pos=0, default=None )
-    p      = get_arg(ctx, 'p',     pos=1, default=2    )
+    p      = get_arg(ctx, 'p',     pos=1, default=2.0  )
     dim    = get_arg(ctx, 'dim',   pos=2, default=1    )
     eps    = get_arg(ctx, 'eps',   pos=3, default=1e-12)
     output = ctx.method_return
@@ -27,32 +26,3 @@ def convert_normalize(ctx):
     
     # divide input by norm
     output._trt = norm
-    
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_normalize_basic():
-    return TestInterface(lambda x: nn.functional.normalize(x))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_normalize_l1_basic():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=1.0))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_normalize_l1p5_basic():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=1.5))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
-def test_normalize_l2_height():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=2.0, dim=2))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)], dynamic_axes={0:[1,32], 1:[3,30]})
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)], dynamic_axes={0:[1,32], 1:[3,30], 2:[3,30]})
-def test_normalize_l2_dynamic():
-    return TestInterface(lambda x: nn.functional.normalize(x, p=2.0))

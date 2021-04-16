@@ -1,4 +1,3 @@
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
 
@@ -9,9 +8,12 @@ def convert_expand(ctx):
     sizes  = ctx.method_args[1:]
     output = ctx.method_return
 
+    if not has_trt(*ctx.method_args):
+        return 
+
     # get tensorrt input 
     input_trt = add_missing_trt_tensors(ctx.network, [input])[0]
-    assert all([i!=-1 for i in input_trt.shape]), "Expand do not support dynamic shape"
+    assert not ctx.is_dynamic, "Expand do not support dynamic shape"
 
     # add tensorrt layer
     inshape  = tuple(input.shape) # exclude batch
@@ -24,15 +26,3 @@ def convert_expand(ctx):
     # get tensorrt output
     output._trt = layer.get_output(0)
     
-    
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,3,3)])
-def test_tensor_expand_singledim():
-    return TestInterface(lambda x: x.expand(1,3,3,3))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,1,3)])
-def test_tensor_expand_multidim():
-    return TestInterface(lambda x: x.expand(1,3,3,3))
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1,1,1,3)])
-def test_tensor_expand_inferdim():
-    return TestInterface(lambda x: x.expand(1,3,-1,-1))

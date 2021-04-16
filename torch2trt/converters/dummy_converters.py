@@ -1,6 +1,6 @@
-from torch2trt.torch2trt import tensorrt_converter
 from torch2trt.utils import *
 
+logger = get_root_logger()
 
 def is_private(method):
     method = method.split('.')[-1]  # remove prefix
@@ -33,6 +33,11 @@ for method in TORCH_METHODS:
         
 
 @tensorrt_converter('torch.Tensor.dim', is_real=False)
-@tensorrt_converter('torch.Tensor.size', is_real=False)
 def dont_warn(ctx):
     pass
+
+
+@tensorrt_converter('torch.Tensor.__setitem__', is_real=False)
+def raise_error(ctx):
+    logger.error("torch.Tensor.__setitem__ would make tracing bug, use torch.scatter instead")
+    raise RuntimeError
