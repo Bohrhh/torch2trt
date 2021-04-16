@@ -36,6 +36,7 @@ from .mean import *
 from .min import *
 from .narrow import *
 from .normalize import *
+from .ones import *
 from .pad import *
 from .permute import *
 from .pow import *

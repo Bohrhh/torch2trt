@@ -22,6 +22,7 @@ def convert_cast(ctx, dtype):
 
     # get tensorrt output
     output._trt = layer.get_output(0)
+    output._trt.shape # Supernatural phenomenon. Only after this line output._trt.dtype would be the dtype we set
 
 
 @tensorrt_converter('torch.Tensor.type')

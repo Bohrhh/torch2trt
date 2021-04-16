@@ -1787,6 +1787,14 @@ def test_normalize_l2_height():
 
 
 # ========================================================================
+# ones
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p', dynamic_axes={0:[1,16]})
+def test_ones_basic():
+    return TestInterface(lambda x: torch.ones(x.shape, device='cuda'))
+
+
+# ========================================================================
 # pad
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)], alphabet='p')
@@ -2321,20 +2329,3 @@ def test_unsqueeze():
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 1, 3)],       alphabet='v', dynamic_axes={0:[1,32], 1:[3,30], 3:[3,30]})
 def test_squeeze():
     return TestInterface(lambda x: x.squeeze(dim=2))
-
-
-# ========================================================================
-# z
-
-class Haha(nn.Module):
-    def __init__(self):
-        super(Haha, self).__init__()
-    def forward(self, x):
-        x = x.to(torch.int64)
-        x = x+0.1
-        return x
-
-
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 128, 40, 64)], alphabet='z', dynamic_axes={0:[1,16],3:[32,64]})
-def test_haha():
-    return Haha()

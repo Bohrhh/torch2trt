@@ -148,15 +148,20 @@ def check_torch_dtype(*tensors):
 
     
 def add_missing_trt_tensors(network, tensors, dtype=None):
-    """Creates missing TensorRT tensors as constants and attaches them to the Torch Tensors"""
+    """Creates missing TensorRT tensors as constants and attaches them to the Torch Tensors
+    
+    Args:
+        dtype (torch dtype): if dtype is None, tensors would be converted to tensorrt tensors 
+            using their common dtype or using dtype provided
+    """
     trt_tensors = [None] * len(tensors)
 
     torch_dtype = check_torch_dtype(*tensors)
     torch_dtype = torch.int32 if torch_dtype==torch.int64 else torch_dtype
     dtype = torch_dtype if dtype is None else dtype
     assert dtype is not None, "No implicit dtype"
-    assert (torch_dtype is None) or (torch_dtype==dtype), \
-        "Tensors data types must match, but now tensors dtype:{} and dtype:{}".format(torch_dtype, dtype)
+    # assert (torch_dtype is None) or (torch_dtype==dtype), \
+    #     "Tensors data types must match, but now tensors dtype:{} and dtype:{}".format(torch_dtype, dtype)
 
 
     for i, t in enumerate(tensors):
@@ -172,11 +177,18 @@ def add_missing_trt_tensors(network, tensors, dtype=None):
             scalar = scalar.detach().cpu().numpy()
             trt_tensor = network.add_constant(shape, scalar).get_output(0)
         elif hasattr(t, "_trt"):
-            trt_tensor = t._trt
+            trt_dtype = torch_dtype_to_trt(dtype)
+            if trt_dtype != t._trt.dtype:
+                layer = network.add_identity(input=t._trt)
+                layer.set_output_type(0, trt_dtype)
+                trt_tensor = layer.get_output(0)
+                trt_tensor.shape # Supernatural phenomenon. Only after this line trt_tensor.dtype would be the trt_dtype we set
+            else:
+                trt_tensor = t._trt
 
         # or... add constant for leaf tensor w/o _trt
         else:
-            t = t.to(torch_dtype_for_trt(t.dtype))
+            t = t.to(torch_dtype_for_trt(dtype))
             weight = t.detach().cpu().numpy()
             shape = weight.shape if t.dim()>0 else (1,)
             t._trt = network.add_constant(shape, weight).get_output(0)

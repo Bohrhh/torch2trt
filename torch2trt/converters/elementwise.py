@@ -1,16 +1,15 @@
 from torch2trt.utils import *
 logger = get_root_logger()
 
-def convert_elementwise(ctx, trt_op):
+def convert_elementwise(ctx, trt_op, dtype=None):
     # parse args
     input_a = ctx.method_args[0]
     input_b = ctx.method_args[1]
     output  = ctx.method_return
 
     # get tensorrt input
-    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input_a, input_b])
+    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input_a, input_b], dtype=dtype)
     input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], output.dim())
-
     # add tensorrt layer
     layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt_op)
 
@@ -18,14 +17,14 @@ def convert_elementwise(ctx, trt_op):
     output._trt = layer.get_output(0)
 
 
-def convert_relementwise(ctx, trt_op):
+def convert_relementwise(ctx, trt_op, dtype=None):
     # parse args
     input_a = ctx.method_args[1]
     input_b = ctx.method_args[0]  # flipped for rsub
     output  = ctx.method_return
 
     # get tensorrt inputs
-    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input_a, input_b])
+    input_a_trt, input_b_trt = add_missing_trt_tensors(ctx.network, [input_a, input_b], dtype=dtype)
     input_a_trt, input_b_trt = broadcast_trt_tensors(ctx.network, [input_a_trt, input_b_trt], output.dim())
 
     # add tensorrt layer
@@ -43,7 +42,7 @@ def convert_relementwise(ctx, trt_op):
 @tensorrt_converter('torch.Tensor.__add__')
 @tensorrt_converter('torch.Tensor.__radd__')
 def convert_add(ctx):
-    convert_elementwise(ctx, trt.ElementWiseOperation.SUM)
+    convert_elementwise(ctx, trt.ElementWiseOperation.SUM, dtype=ctx.method_return.dtype)
 
 
 # ============================================================
@@ -53,12 +52,12 @@ def convert_add(ctx):
 @tensorrt_converter('torch.Tensor.__isub__')
 @tensorrt_converter('torch.Tensor.__sub__')
 def convert_sub(ctx):
-    convert_elementwise(ctx, trt.ElementWiseOperation.SUB)
+    convert_elementwise(ctx, trt.ElementWiseOperation.SUB, dtype=ctx.method_return.dtype)
 
 
 @tensorrt_converter('torch.Tensor.__rsub__')
 def convert_rsub(ctx):
-    convert_relementwise(ctx, trt.ElementWiseOperation.SUB)
+    convert_relementwise(ctx, trt.ElementWiseOperation.SUB, dtype=ctx.method_return.dtype)
 
 
 # ============================================================
@@ -69,7 +68,7 @@ def convert_rsub(ctx):
 @tensorrt_converter('torch.Tensor.__mul__')
 @tensorrt_converter('torch.Tensor.__rmul__')
 def convert_mul(ctx):
-    convert_elementwise(ctx, trt.ElementWiseOperation.PROD)
+    convert_elementwise(ctx, trt.ElementWiseOperation.PROD, dtype=ctx.method_return.dtype)
 
 
 # ============================================================
@@ -81,13 +80,13 @@ def convert_mul(ctx):
 @tensorrt_converter('torch.Tensor.__truediv__') # py3
 @tensorrt_converter('torch.Tensor.__itruediv__') # py3
 def convert_div(ctx):
-    convert_elementwise(ctx, trt.ElementWiseOperation.DIV)
+    convert_elementwise(ctx, trt.ElementWiseOperation.DIV, dtype=ctx.method_return.dtype)
 
 
 @tensorrt_converter('torch.Tensor.__rdiv__') # py2
 @tensorrt_converter('torch.Tensor.__rtruediv__') # py3
 def convert_rdiv(ctx):
-    convert_relementwise(ctx, trt.ElementWiseOperation.DIV)
+    convert_relementwise(ctx, trt.ElementWiseOperation.DIV, dtype=ctx.method_return.dtype)
 
 
 @tensorrt_converter('torch.floor_divide')
@@ -95,7 +94,7 @@ def convert_rdiv(ctx):
 @tensorrt_converter('torch.Tensor.__ifloordiv__')
 def convert_floordiv(ctx):
     logger.error('operation "//" only positive result would give correct result')
-    convert_elementwise(ctx, trt.ElementWiseOperation.FLOOR_DIV)
+    convert_elementwise(ctx, trt.ElementWiseOperation.FLOOR_DIV, dtype=ctx.method_return.dtype)
 
 
 # ============================================================
