@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.txt": "python",
-        "*.cmake": "python",
-        "*.cu": "c",
-        "*.mlu": "c",
-        "*.cuh": "cpp"
-    }
-}
