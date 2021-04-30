@@ -5,7 +5,7 @@
 #include "NvInfer.h"
 #include "NvInferPlugin.h"
 
-const int CUDA_NUM_THREADS = 1024;
+const int CUDA_NUM_THREADS = 512; // be compatible with jetson nano
 const int kMaxGridNum = 65535;
 
 #define CUDACHECK(status_)                                                                                             \

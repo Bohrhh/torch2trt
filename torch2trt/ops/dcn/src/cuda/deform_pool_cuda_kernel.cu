@@ -21,7 +21,7 @@ using namespace at;
        i < (n);                                       \
        i += blockDim.x * gridDim.x)
 
-const int CUDA_NUM_THREADS = 1024;
+const int CUDA_NUM_THREADS = 512; // be compatible with jetson nano
 inline int GET_BLOCKS(const int N)
 {
   return (N + CUDA_NUM_THREADS - 1) / CUDA_NUM_THREADS;

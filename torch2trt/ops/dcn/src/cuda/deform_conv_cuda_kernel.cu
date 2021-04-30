@@ -73,7 +73,7 @@ using namespace at;
   for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < (n); \
        i += blockDim.x * gridDim.x)
 
-const int CUDA_NUM_THREADS = 1024;
+const int CUDA_NUM_THREADS = 512; // be compatible with jetson nano
 const int kMaxGridNum = 65535;
 
 inline int GET_BLOCKS(const int N)
