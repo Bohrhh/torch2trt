@@ -167,9 +167,6 @@ def convert_tan(ctx):
     __convert_unary(ctx, trt.UnaryOperation.TAN)
 
 
-
-
-
 #  |    ASINH : Inverse hyperbolic sine
 #  |  
 #  |    ACOSH : Inverse hyperbolic cosine

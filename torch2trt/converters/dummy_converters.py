@@ -4,7 +4,7 @@ logger = get_root_logger()
 
 def is_private(method):
     method = method.split('.')[-1]  # remove prefix
-    return method[0] == '_' and method[1] is not '_'
+    return method[0] == '_' and method[1] != '_'
 
 def is_function_type(method):
     fntype =  eval(method + '.__class__.__name__')

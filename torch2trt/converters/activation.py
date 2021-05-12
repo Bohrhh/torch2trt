@@ -82,6 +82,9 @@ def convert_sigmoid(ctx):
 # Tanh
 @tensorrt_converter('torch.nn.functional.tanh')
 @tensorrt_converter('torch.tanh')
+@tensorrt_converter('torch.tanh_')
+@tensorrt_converter('torch.Tensor.tanh')
+@tensorrt_converter('torch.Tensor.tanh_')
 def convert_tanh(ctx):
     # parse args
     input  = ctx.method_args[0]
